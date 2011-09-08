@@ -1,0 +1,56 @@
+<script>
+
+function error_handler(desc,page,line){
+
+ parent.document.all.error.innerText = 'Error caught At Line :'+line+"\n"+
+                                   'Description: \t'+desc
+ return true
+
+}
+
+window.onerror=error_handler;
+
+var run_next = new Array();
+
+function LoadCode(i){
+	ta.value = run_next[i]
+}	
+
+function real_eval(x){;}
+
+function hooked_write(x){
+	//alert(x)
+	AddEntry("document.write("+x+")")
+}
+function hooked_writeln(x){
+	//alert(x)
+	AddEntry("document.writeln("+x+")")
+}
+
+function hooked_eval(x){
+	//alert(x)
+	AddEntry("eval("+x+")")
+}
+
+function AddEntry(x){
+    	run_next[run_next.length] = x
+	a = "<a href='javascript:frame1.LoadCode("+(run_next.length-1)+")'>Load</a> - "
+	parent.document.all.t1.insertRow().insertCell().innerHTML= a + x.split('<').join('&lt;') ;
+}
+
+function runit(x){
+	parent.document.all.error.innerText = ""
+	real_eval(x)
+}	
+ 
+real_eval        = eval
+eval             = hooked_eval
+document.write   = hooked_write
+document.writeln = hooked_writeln
+
+
+</script>
+
+<textarea rows=20 cols=65 id=ta name=ta style="position:absolute:top:0;left:0"></textarea><br>
+<input type=button onclick="runit(ta.value)" value="Run"> &nbsp; &nbsp;
+<input type=button onclick="ta.value=ta.value.split(';').join(';\n').split('{').join('{\n').split('}').join('}\n');" value="Cleanup">
