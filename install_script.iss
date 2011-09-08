@@ -5,7 +5,8 @@ AppName=Malcode Analyst Pack
 AppVerName=Malcode Analyst Pack v0.21
 DefaultDirName=c:\iDefense\MAP\
 DefaultGroupName=Malcode Analyst Pack
-OutputBaseFilename=map_setup
+OutputBaseFilename=./map_setup
+OutputDir=./
 
 
 [Files]
