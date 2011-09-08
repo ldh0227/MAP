@@ -196,6 +196,26 @@ void PruneApiTree(int apiCnt){
 	}
 }
 
+char* findProcessByPid(int pid){
+	
+	PROCESSENTRY32 pe;
+    HANDLE hSnap;
+	int cnt=0;
+    
+    pe.dwSize = sizeof(pe);
+    hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    
+    Process32First( hSnap, &pe);
+    if( pe.th32ProcessID == pid ) return strdup(pe.szExeFile);
+
+    while( Process32Next(hSnap, &pe) ){
+		if( pe.th32ProcessID == pid ) return strdup(pe.szExeFile);
+	}
+
+	return strdup("-- Could not find pid with ToolHelp Api! --");
+
+}
+
 void GetProcessPath(int pid, char* buf){ 
 //this is a round about way to avoid using EnumProcessModules and any PSAPI
 //functions which would likely be hooked if rootkit is present
@@ -265,7 +285,9 @@ void GetProcessPath(int pid, char* buf){
 	
 	}
 	else{
-		 strcpy(buf, "---- Could not OpenProcess ----");
+		 //strcpy(buf, "---- Could not OpenProcess ----");
+		 strcpy(buf, "Api: ");
+		 strcat(buf, findProcessByPid(pid));
 		 return;
 	}
 
@@ -297,6 +319,8 @@ bool GetSeDebug(void){
 	CloseHandle(hToken);
 	return ret;
 }
+
+
 
 void main(int argc, char** argv)
 {

@@ -9,6 +9,14 @@ Begin VB.Form Form1
    ScaleHeight     =   3840
    ScaleWidth      =   7935
    StartUpPosition =   3  'Windows Default
+   Begin VB.CheckBox Check1 
+      Caption         =   "Make Unk"
+      Height          =   255
+      Left            =   6600
+      TabIndex        =   7
+      Top             =   3240
+      Width           =   1335
+   End
    Begin VB.CommandButton cmdHelp 
       Caption         =   "?"
       Height          =   375
@@ -167,7 +175,10 @@ Private Sub Command1_Click()
             ImportStyleCall l, addr, import
         ElseIf InStr(l, "JMP") > 0 Then 'style 1
             ImportStyleJmp l, addr, import
+        ElseIf InStr(l, ".") > 0 Then
+            PointerTable l, addr, import
         End If
+
 
         If Len(import) = 0 Then GoTo nextone
 
@@ -176,7 +187,7 @@ Private Sub Command1_Click()
         import = Replace(import, "-", "_") 'some chars are reserved for IDA names
 
         'MakeName(0X4010E8,  "THISISMYSUB_2");
-        tmp = tmp & vbTab & "MakeUnkn(0X" & addr & ",1);" & vbCrLf
+        If Check1.Value Then tmp = tmp & vbTab & "MakeUnkn(0X" & addr & ",1);" & vbCrLf
         tmp = tmp & vbTab & "MakeName(0X" & addr & ",""" & import & "_"");" & vbCrLf
         
         
@@ -186,6 +197,25 @@ nextone:
     Text2 = header & tmp & "}"
     
 End Sub
+
+Sub PointerTable(fileLine, addrVar, importNameVar)
+    '43434394 >7C91137A  ntdll.RtlDeleteCriticalSection
+    l = Split(fileLine, " ")
+    addrVar = l(0)
+    importNameVar = l(UBound(l))
+    
+    a = InStr(importNameVar, ".")
+    If a > 0 Then
+        importNameVar = Mid(importNameVar, a + 1)
+    End If
+    
+    If KeyExistsInCollection(unique, CStr(importNameVar)) Then
+        importNameVar = Empty
+        addrVar = Empty
+    End If
+    
+End Sub
+
 
 'all variables byref modificed here
 Sub ImportStyleJmp(fileLine, addrVar, importNameVar)
