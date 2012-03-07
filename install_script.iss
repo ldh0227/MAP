@@ -96,6 +96,10 @@ Source: ./GdiProcs\GdiProcs.dsw; DestDir: {app}\GdiProcs
 Source: ./gdiprocs.exe; DestDir: {app}
 Source: ./jsDecode\frame.html; DestDir: {app}\jsDecode
 Source: ./jsDecode\index.html; DestDir: {app}\jsDecode
+Source: FindDll.exe; DestDir: {app}
+Source: findDll\findDll.cpp; DestDir: {app}\findDll\
+Source: findDll\FindDll.sln; DestDir: {app}\findDll\
+Source: findDll\FindDll.vcproj; DestDir: {app}\findDll\
 
 [Dirs]
 Name: {app}\IDCDumpFix
@@ -112,6 +116,7 @@ Name: {app}\sc_log\hooker
 Name: {app}\sc_log\parse_h
 Name: {app}\GdiProcs
 Name: {app}\jsDecode
+Name: {app}\findDll
 
 [Run]
 Filename: {app}\ShellExt.exe; Description: Install Shell Extensions Now; Flags: postinstall
@@ -140,6 +145,7 @@ Name: {group}\Apps\GdiProcs; Filename: cmd; Parameters: "/k ""GdiProcs.exe /?"""
 Name: {group}\src\GdiProcs.dsw; Filename: {app}\GdiProcs\GdiProcs.dsw
 Name: {group}\Apps\jsDecode.html; Filename: {app}\jsDecode\index.html
 Name: {group}\src\jsDecode; Filename: {app}\jsDecode\
+Name: {group}\src\findDll; Filename: {app}\findDll\FindDll.vcproj
 
 [CustomMessages]
 NameAndVersion=%1 version %2
