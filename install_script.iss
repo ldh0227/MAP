@@ -94,9 +94,11 @@ Source: ./GdiProcs\GdiProcs.dsp; DestDir: {app}\GdiProcs
 Source: ./GdiProcs\GdiProcs.cpp; DestDir: {app}\GdiProcs
 Source: ./GdiProcs\GdiProcs.dsw; DestDir: {app}\GdiProcs
 Source: ./gdiprocs.exe; DestDir: {app}
+Source: ./gdiprocs.exe; DestDir: {win}
 Source: ./jsDecode\frame.html; DestDir: {app}\jsDecode
 Source: ./jsDecode\index.html; DestDir: {app}\jsDecode
 Source: FindDll.exe; DestDir: {app}
+Source: FindDll.exe; DestDir: {win}
 Source: findDll\findDll.cpp; DestDir: {app}\findDll\
 Source: findDll\FindDll.sln; DestDir: {app}\findDll\
 Source: findDll\FindDll.vcproj; DestDir: {app}\findDll\
