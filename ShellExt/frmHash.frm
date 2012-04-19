@@ -13,10 +13,18 @@ Begin VB.Form frmHash
    ScaleHeight     =   3360
    ScaleWidth      =   8475
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cmdCopyHashs 
+      Caption         =   "Copy Hashs"
+      Height          =   315
+      Left            =   1050
+      TabIndex        =   5
+      Top             =   3000
+      Width           =   1095
+   End
    Begin VB.CommandButton cmdListDups 
       Caption         =   "Display Unique"
       Height          =   315
-      Left            =   1920
+      Left            =   2340
       TabIndex        =   4
       Top             =   3000
       Width           =   1755
@@ -30,12 +38,12 @@ Begin VB.Form frmHash
       Width           =   1995
    End
    Begin VB.CommandButton Command3 
-      Caption         =   "Copy List"
+      Caption         =   "Copy All"
       Height          =   315
       Left            =   60
       TabIndex        =   2
       Top             =   3000
-      Width           =   1455
+      Width           =   975
    End
    Begin VB.CommandButton Command2 
       Caption         =   "Delete Selected Files"
@@ -167,6 +175,19 @@ Function KeyExistsInCollection(c As Collection, val As String) As Boolean
  Exit Function
 nope: KeyExistsInCollection = False
 End Function
+
+Private Sub cmdCopyHashs_Click()
+    Dim li As ListItem
+    Dim t As String
+    
+    For Each li In lv.ListItems
+        t = t & li.SubItems(2) & vbCrLf
+    Next
+    
+    Clipboard.Clear
+    Clipboard.SetText t
+    MsgBox "Copy Complete", vbInformation
+End Sub
 
 Private Sub cmdDeleteDups_Click()
     
