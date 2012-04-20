@@ -2,65 +2,25 @@ VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
 Begin VB.Form frmHash 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "Directory File Hasher"
-   ClientHeight    =   3360
+   Caption         =   "Directory File Hasher - Right Click on ListView for Menu Options"
+   ClientHeight    =   3765
    ClientLeft      =   45
    ClientTop       =   330
-   ClientWidth     =   8475
+   ClientWidth     =   9150
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3360
-   ScaleWidth      =   8475
+   ScaleHeight     =   3765
+   ScaleWidth      =   9150
    StartUpPosition =   2  'CenterScreen
-   Begin VB.CommandButton cmdCopyHashs 
-      Caption         =   "Copy Hashs"
-      Height          =   315
-      Left            =   1050
-      TabIndex        =   5
-      Top             =   3000
-      Width           =   1095
-   End
-   Begin VB.CommandButton cmdListDups 
-      Caption         =   "Display Unique"
-      Height          =   315
-      Left            =   2340
-      TabIndex        =   4
-      Top             =   3000
-      Width           =   1755
-   End
-   Begin VB.CommandButton cmdDeleteDups 
-      Caption         =   "Delete All Duplicates"
-      Height          =   315
-      Left            =   6420
-      TabIndex        =   3
-      Top             =   3000
-      Width           =   1995
-   End
-   Begin VB.CommandButton Command3 
-      Caption         =   "Copy All"
-      Height          =   315
-      Left            =   60
-      TabIndex        =   2
-      Top             =   3000
-      Width           =   975
-   End
-   Begin VB.CommandButton Command2 
-      Caption         =   "Delete Selected Files"
-      Height          =   315
-      Left            =   4140
-      TabIndex        =   1
-      Top             =   3000
-      Width           =   1935
-   End
    Begin MSComctlLib.ListView lv 
-      Height          =   3015
+      Height          =   3735
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   8415
-      _ExtentX        =   14843
-      _ExtentY        =   5318
+      Width           =   9105
+      _ExtentX        =   16060
+      _ExtentY        =   6588
       View            =   3
       LabelEdit       =   1
       MultiSelect     =   -1  'True
@@ -91,6 +51,37 @@ Begin VB.Form frmHash
          Object.Width           =   5292
       EndProperty
    End
+   Begin VB.Menu mnuPopup 
+      Caption         =   "mnuPopup"
+      Visible         =   0   'False
+      Begin VB.Menu mnuCopyTable 
+         Caption         =   "Copy Table"
+      End
+      Begin VB.Menu mnuCopyHashs 
+         Caption         =   "Copy Hashs"
+      End
+      Begin VB.Menu mnuDiv 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuDisplayUnique 
+         Caption         =   "Display unique"
+      End
+      Begin VB.Menu mnuVTAll 
+         Caption         =   "Virus Total Lookup On All"
+      End
+      Begin VB.Menu mnuVTLookupSelected 
+         Caption         =   "Virus Total Lookup On Selected"
+      End
+      Begin VB.Menu mnudivider 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuDeleteSelected 
+         Caption         =   "Deleted Selected Files"
+      End
+      Begin VB.Menu mnuDeleteDuplicates 
+         Caption         =   "Delete All Duplicates"
+      End
+   End
 End
 Attribute VB_Name = "frmHash"
 Attribute VB_GlobalNameSpace = False
@@ -114,6 +105,7 @@ Attribute VB_Exposed = False
 '         Place, Suite 330, Boston, MA 02111-1307 USA
 
 '7-6-05 Added Delete All Duplicates option
+'4-19-12 moved buttons to right click menu options, integrated VirusTotal.exe options
 
 Dim path As String
 
@@ -176,7 +168,11 @@ Function KeyExistsInCollection(c As Collection, val As String) As Boolean
 nope: KeyExistsInCollection = False
 End Function
 
-Private Sub cmdCopyHashs_Click()
+Private Sub lv_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+    If Button = vbRightButton Then PopupMenu mnuPopup
+End Sub
+
+Private Sub mnuCopyHashs_Click()
     Dim li As ListItem
     Dim t As String
     
@@ -189,7 +185,7 @@ Private Sub cmdCopyHashs_Click()
     MsgBox "Copy Complete", vbInformation
 End Sub
 
-Private Sub cmdDeleteDups_Click()
+Private Sub mnuDeleteDuplicates_Click()
     
     Dim li As ListItem
     Dim hashs As New Collection
@@ -223,7 +219,7 @@ nextone:
     
 End Sub
 
-Private Sub cmdListDups_Click()
+Private Sub mnuDisplayUnique_Click()
 
      Dim li As ListItem
      Dim hashs As New Collection 'to perform unique value lookup and corrolate to ary index
@@ -275,7 +271,7 @@ Exit Sub
 hell: MsgBox Err.Description
 End Sub
 
-Private Sub Command2_Click()
+Private Sub mnuDeleteSelected_Click()
     Dim li As ListItem
     Dim f As String
     On Error Resume Next
@@ -298,7 +294,9 @@ nextone:
     
 End Sub
 
-Private Sub Command3_Click()
+
+Private Sub mnuCopyTable_Click()
+
     Dim li As ListItem
     Dim t As String
     
@@ -327,6 +325,7 @@ Sub handleFile(f As String)
     Set li = lv.ListItems.Add(, , fso.FileNameFromPath(f))
     li.SubItems(1) = FileLen(f)
     li.SubItems(2) = h
+    li.Tag = f
     
 End Sub
 
@@ -334,4 +333,60 @@ End Sub
 
 Private Sub Form_Load()
     lv.ColumnHeaders(3).Width = lv.Width - lv.ColumnHeaders(3).Left - 100
+End Sub
+
+Private Sub Form_Resize()
+    On Error Resume Next
+    lv.Width = Me.Width - lv.Left - 140
+    lv.Height = Me.Height - lv.Top - 140
+End Sub
+
+Private Sub mnuVTAll_Click()
+
+    On Error Resume Next
+    Dim li As ListItem
+    Dim t As String
+    
+    For Each li In lv.ListItems
+        t = t & li.SubItems(2) & vbCrLf
+    Next
+    
+    If Len(t) = 0 Then Exit Sub
+    
+    Clipboard.Clear
+    Clipboard.SetText t
+    Shell App.path & "\virustotal.exe /bulk", vbNormalFocus
+    
+End Sub
+
+Private Sub mnuVTLookupSelected_Click()
+    On Error Resume Next
+    Dim hashs() As String
+    Dim li As ListItem
+    Dim h As String
+    Dim i As Long
+    
+    For Each li In lv.ListItems
+        If li.Selected Then
+            h = li.SubItems(2)
+            If Len(h) > 0 Then
+                push hashs, li.SubItems(2)
+                i = i + 1
+            End If
+        End If
+    Next
+
+    If i = 0 Then
+        MsgBox "No items were selected!", vbInformation
+        Exit Sub
+    End If
+    
+    If i = 1 Then
+        Shell App.path & "\virustotal.exe """ & lv.SelectedItem.Tag & """", vbNormalFocus
+    Else
+        Clipboard.Clear
+        Clipboard.SetText Join(hashs, vbCrLf)
+        Shell App.path & "\virustotal.exe /bulk", vbNormalFocus
+    End If
+    
 End Sub

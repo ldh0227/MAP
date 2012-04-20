@@ -2,7 +2,7 @@ VERSION 5.00
 Begin VB.Form frmMain 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Install Shell Extensions"
-   ClientHeight    =   2295
+   ClientHeight    =   2790
    ClientLeft      =   45
    ClientTop       =   330
    ClientWidth     =   5130
@@ -10,14 +10,14 @@ Begin VB.Form frmMain
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   2295
+   ScaleHeight     =   2790
    ScaleWidth      =   5130
    ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
    Begin VB.TextBox Text2 
       Appearance      =   0  'Flat
-      Height          =   1155
+      Height          =   1575
       Left            =   60
       Locked          =   -1  'True
       MultiLine       =   -1  'True
@@ -30,7 +30,7 @@ Begin VB.Form frmMain
       Height          =   615
       Left            =   60
       TabIndex        =   2
-      Top             =   1200
+      Top             =   1650
       Width           =   4995
       Begin VB.CommandButton cmdMinLen 
          Caption         =   "Update"
@@ -63,7 +63,7 @@ Begin VB.Form frmMain
       Height          =   315
       Left            =   4020
       TabIndex        =   1
-      Top             =   1920
+      Top             =   2370
       Width           =   1035
    End
    Begin VB.CommandButton cmdRemoveRegKeys 
@@ -71,7 +71,7 @@ Begin VB.Form frmMain
       Height          =   315
       Left            =   2880
       TabIndex        =   0
-      Top             =   1920
+      Top             =   2370
       Width           =   1035
    End
 End
@@ -105,6 +105,8 @@ Option Explicit
 '         4) "MD5 Hash" context menu added for all file types (added 12.15.05)
 '               -bug fix 9/7/07 some ms service pack broke my vbdevkit md5 code..fixed now :-\
 '
+'         5) "Virus Total" context menu added for all file types (added 4-19-12)
+'
 '
 'License: Copyright (C) 2005 David Zimmer <david@idefense.com, dzzie@yahoo.com>
 '
@@ -126,6 +128,7 @@ Const peek = "*\shell\Strings\command"
 Const hash = "Folder\shell\Hash Files\command"
 Const deco = "chm.file\shell\Decompile\command"
 Const m5 = "*\shell\Md5 Hash\command"
+Const vt = "*\shell\Virus Total\command"
 
 Private Sub cmdInstallRegKeys_Click()
 
@@ -133,6 +136,7 @@ Private Sub cmdInstallRegKeys_Click()
     Dim cmdline_2 As String
     Dim cmdline_3 As String
     Dim cmdline_4 As String
+    Dim cmdline_5 As String
     Dim reg As New clsRegistry2
     
     'note app.path will be wrong value to use in IDE unless you actually compile
@@ -142,6 +146,7 @@ Private Sub cmdInstallRegKeys_Click()
     cmdline_2 = """" & App.path & "\shellext.exe"" ""%1"" /hash"
     cmdline_3 = """" & App.path & "\shellext.exe"" ""%1"" /deco"
     cmdline_4 = """" & App.path & "\shellext.exe"" ""%1"" /md5f"
+    cmdline_5 = """" & App.path & "\virustotal.exe"" ""%1"""
     
     On Error GoTo hell
     
@@ -164,6 +169,10 @@ Private Sub cmdInstallRegKeys_Click()
     
     If reg.CreateKey(m5) Then
         reg.SetValue m5, "", cmdline_4, REG_SZ
+    End If
+    
+    If reg.CreateKey(vt) Then
+        reg.SetValue vt, "", cmdline_5, REG_SZ
     End If
     
     MsgBox "Entries Added", vbInformation
@@ -205,6 +214,11 @@ Private Sub cmdRemoveRegKeys_Click()
     If reg.keyExists(m5) Then
         a = reg.DeleteKey(m5)
         a = reg.DeleteKey("*\shell\Md5 Hash\")
+    End If
+    
+    If reg.keyExists(vt) Then
+        a = reg.DeleteKey(vt)
+        a = reg.DeleteKey("*\shell\Virus Total\")
     End If
     
     If reg.keyExists(hash) Then

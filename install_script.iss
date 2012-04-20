@@ -102,6 +102,16 @@ Source: FindDll.exe; DestDir: {win}
 Source: findDll\findDll.cpp; DestDir: {app}\findDll\
 Source: findDll\FindDll.sln; DestDir: {app}\findDll\
 Source: findDll\FindDll.vcproj; DestDir: {app}\findDll\
+Source: VirusTotal\CResult.cls; DestDir: {app}\VirusTotal\
+Source: VirusTotal\CScan.cls; DestDir: {app}\VirusTotal\
+Source: VirusTotal\CVirusTotal.cls; DestDir: {app}\VirusTotal\
+Source: VirusTotal\Form1.frm; DestDir: {app}\VirusTotal\
+Source: VirusTotal\Form2.frm; DestDir: {app}\VirusTotal\
+Source: VirusTotal\MD5Hash.cls; DestDir: {app}\VirusTotal\
+Source: VirusTotal\Project1.vbp; DestDir: {app}\VirusTotal\
+Source: VirusTotal\Project1.vbw; DestDir: {app}\VirusTotal\
+Source: VirusTotal\sample.txt; DestDir: {app}\VirusTotal\
+Source: virustotal.exe; DestDir: {app}
 
 [Dirs]
 Name: {app}\IDCDumpFix
@@ -119,6 +129,7 @@ Name: {app}\sc_log\parse_h
 Name: {app}\GdiProcs
 Name: {app}\jsDecode
 Name: {app}\findDll
+Name: {app}\VirusTotal
 
 [Run]
 Filename: {app}\ShellExt.exe; Description: Install Shell Extensions Now; Flags: postinstall
@@ -148,6 +159,7 @@ Name: {group}\src\GdiProcs.dsw; Filename: {app}\GdiProcs\GdiProcs.dsw
 Name: {group}\Apps\jsDecode.html; Filename: {app}\jsDecode\index.html
 Name: {group}\src\jsDecode; Filename: {app}\jsDecode\
 Name: {group}\src\findDll; Filename: {app}\findDll\FindDll.vcproj
+Name: {group}\src\VirusTotal.vbp; Filename: {app}\VirusTotal\Project1.vbp
 
 [CustomMessages]
 NameAndVersion=%1 version %2
