@@ -6,12 +6,12 @@ Begin VB.Form frmHash
    ClientHeight    =   3765
    ClientLeft      =   45
    ClientTop       =   330
-   ClientWidth     =   9150
+   ClientWidth     =   9195
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   3765
-   ScaleWidth      =   9150
+   ScaleWidth      =   9195
    StartUpPosition =   2  'CenterScreen
    Begin MSComctlLib.ListView lv 
       Height          =   3735
@@ -65,6 +65,15 @@ Begin VB.Form frmHash
       End
       Begin VB.Menu mnuDisplayUnique 
          Caption         =   "Display unique"
+      End
+      Begin VB.Menu mnuRenameToMD5 
+         Caption         =   "Rename All to MD5"
+      End
+      Begin VB.Menu mnuMakeExtSafe 
+         Caption         =   "Make All Extensions Safe"
+      End
+      Begin VB.Menu mnuSpacer33 
+         Caption         =   "-"
       End
       Begin VB.Menu mnuVTAll 
          Caption         =   "Virus Total Lookup On All"
@@ -332,13 +341,81 @@ End Sub
 
 
 Private Sub Form_Load()
-    lv.ColumnHeaders(3).Width = lv.Width - lv.ColumnHeaders(3).Left - 100
+    lv.ColumnHeaders(1).Width = lv.Width - lv.ColumnHeaders(2).Width - 400 - lv.ColumnHeaders(3).Width
 End Sub
 
 Private Sub Form_Resize()
     On Error Resume Next
     lv.Width = Me.Width - lv.Left - 140
-    lv.Height = Me.Height - lv.Top - 140
+    lv.Height = Me.Height - lv.Top - 450
+End Sub
+
+Private Sub mnuMakeExtSafe_Click()
+     On Error Resume Next
+    Dim li As ListItem
+    Dim pdir As String
+    Dim i As Long
+    
+    For Each li In lv.ListItems
+        i = 1
+        fpath = li.Tag
+        fname = li.Text
+        pdir = fso.GetParentFolder(fpath) & "\"
+        h = fname & "_"
+        
+        If InStr(fname, ".") < 1 Then GoTo nextone     'no extension
+        If VBA.Right(fname, 1) = "_" Then GoTo nextone 'already safe
+        
+        While fso.FileExists(pdir & h) 'dont delete dups, but append counter onto end..
+            h = fname & "_" & i
+            i = i + 1
+        Wend
+        
+        Name fpath As pdir & h
+    
+        li.Text = h
+        li.Tag = pdir & h
+        li.EnsureVisible
+        lv.Refresh
+        DoEvents
+        
+nextone:
+    Next
+   
+End Sub
+
+Private Sub mnuRenameToMD5_Click()
+    
+    On Error Resume Next
+    Dim li As ListItem
+    Dim pdir As String
+    Dim i As Long
+    
+    For Each li In lv.ListItems
+        i = 2
+        fpath = li.Tag
+        fname = li.Text
+        h = li.SubItems(2)
+        pdir = fso.GetParentFolder(fpath) & "\"
+        
+        If LCase(fname) = LCase(h) Then GoTo nextone
+        While fso.FileExists(pdir & h) 'dont delete dups, but append counter onto end..
+            h = li.SubItems(2) & "_" & i
+            i = i + 1
+        Wend
+        
+        Name fpath As pdir & h
+    
+        li.Text = h
+        li.Tag = pdir & h
+        li.EnsureVisible
+        lv.Refresh
+        DoEvents
+        
+nextone:
+    Next
+        
+    
 End Sub
 
 Private Sub mnuVTAll_Click()

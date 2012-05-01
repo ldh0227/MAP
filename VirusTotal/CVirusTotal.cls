@@ -32,6 +32,14 @@ Private Declare Function GetTickCount Lib "kernel32" () As Long
 
 Public report_cache_dir As String 'if this is set it will cache the results here in case looked up again.
 
+'this class supports a couple nice things..
+'1) if you set the cache dir, it will save raw json there as optimization in case you lookup the same file
+'    file again. this will sve you the 4sec delay per request.
+'2) this class tracks when the last request was made, and implements its own optimized delay so that the
+'   4 second threshold is not exceeded.
+'3) since vb doesnt support json, a CScan object is always passed back with details of the scan. parsing
+'    was just done in VB and is VT json specific and maybe a bit shady as it was done quickly..
+
 Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
 
     On Error Resume Next
@@ -42,6 +50,8 @@ Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
     Dim sStatus As String
     Dim status As Long
     Dim curtime As Long
+    Dim success As Boolean
+    Dim errorMsg As String
     
     Set List1 = list
     Set Timer1 = tmr
@@ -51,8 +61,8 @@ Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
     Set http = New XMLHTTP
     
     If http Is Nothing Then
-        List1.AddItem "Could not create XMLHTTP Object"
-        Exit Function
+        errorMsg = "Could not create XMLHTTP Object"
+        GoTo errorExit
     End If
 
     curtime = GetTickCount
@@ -96,9 +106,13 @@ Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
     NeedsDelay = True 'need 4 second delay for next
     
     LastQueryTime = GetTickCount
-    If Not Get_Web_Report(hash, my_json, sStatus, status) Then
-        List1.AddItem "Web request failure - status code: " & status & " " & sStatus
-        Exit Function
+    success = Get_Web_Report(hash, my_json, sStatus, status)
+    scan.HTTP_ResponseCode = status
+    scan.HTTP_StatusMessage = sStatus
+    
+    If Not success Then
+        errorMsg = "Web request failure - status code: " & status & " " & sStatus
+        GoTo errorExit
     End If
    
     List1.AddItem "Query successful for hash: " & hash
@@ -114,6 +128,14 @@ parse_json:
     List1.AddItem "Detections: " & scan.positives & " Response Code: " & scan.response_code
     If scan.HadError Then List1.AddItem "Had JSON Parsing error..."
     
+Exit Function
+
+errorExit:
+
+    List1.AddItem errorMsg
+    scan.Errors.Add errorMsg
+    scan.HadError = True
+    Set GetReport = scan
     
 End Function
 

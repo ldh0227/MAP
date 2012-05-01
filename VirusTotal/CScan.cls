@@ -38,6 +38,8 @@ Public total
 Public md5
 
 Public RawJson As String
+Public HTTP_ResponseCode As Long
+Public HTTP_StatusMessage As String
 
 Public results As New Collection
 Public HadError As Boolean
