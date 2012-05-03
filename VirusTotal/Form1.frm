@@ -5,21 +5,45 @@ Begin VB.Form Form1
    ClientHeight    =   7770
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   9210
+   ClientWidth     =   11190
    LinkTopic       =   "Form2"
    ScaleHeight     =   7770
-   ScaleWidth      =   9210
+   ScaleWidth      =   11190
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cmdBrowse 
+      Caption         =   "..."
+      Height          =   285
+      Left            =   8190
+      TabIndex        =   8
+      Top             =   150
+      Width           =   645
+   End
+   Begin VB.TextBox txtCacheDir 
+      Height          =   285
+      Left            =   3780
+      TabIndex        =   7
+      Text            =   "C:\VT_Cache\"
+      Top             =   120
+      Width           =   4335
+   End
+   Begin VB.CheckBox chkCache 
+      Caption         =   "Cache Reports"
+      Height          =   285
+      Left            =   2130
+      TabIndex        =   6
+      Top             =   120
+      Width           =   1545
+   End
    Begin VB.Timer tmrDelay 
       Enabled         =   0   'False
       Interval        =   4500
-      Left            =   6990
-      Top             =   30
+      Left            =   8700
+      Top             =   540
    End
    Begin VB.CommandButton cmdAbort 
       Caption         =   "Abort"
       Height          =   405
-      Left            =   7650
+      Left            =   9510
       TabIndex        =   5
       Top             =   60
       Width           =   1455
@@ -29,8 +53,8 @@ Begin VB.Form Form1
       Left            =   60
       TabIndex        =   4
       Top             =   1740
-      Width           =   9105
-      _ExtentX        =   16060
+      Width           =   10875
+      _ExtentX        =   19182
       _ExtentY        =   503
       _Version        =   393216
       Appearance      =   1
@@ -59,15 +83,15 @@ Begin VB.Form Form1
       ScrollBars      =   2  'Vertical
       TabIndex        =   2
       Top             =   4530
-      Width           =   9165
+      Width           =   10965
    End
    Begin MSComctlLib.ListView lv 
       Height          =   2445
       Left            =   30
       TabIndex        =   1
       Top             =   2040
-      Width           =   9135
-      _ExtentX        =   16113
+      Width           =   10935
+      _ExtentX        =   19288
       _ExtentY        =   4313
       View            =   3
       LabelEdit       =   1
@@ -81,7 +105,7 @@ Begin VB.Form Form1
       BackColor       =   -2147483643
       BorderStyle     =   1
       Appearance      =   1
-      NumItems        =   3
+      NumItems        =   4
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "hash"
          Object.Width           =   7056
@@ -93,6 +117,11 @@ Begin VB.Form Form1
       EndProperty
       BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          SubItemIndex    =   2
+         Text            =   "Date"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   3
          Text            =   "Description"
          Object.Width           =   2540
       EndProperty
@@ -111,7 +140,7 @@ Begin VB.Form Form1
       Left            =   30
       TabIndex        =   0
       Top             =   510
-      Width           =   9135
+      Width           =   10935
    End
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
@@ -124,6 +153,9 @@ Begin VB.Form Form1
       End
       Begin VB.Menu mnuCopyAll 
          Caption         =   "Copy All Results"
+      End
+      Begin VB.Menu mnuSaveReports 
+         Caption         =   "Save Reports to Files"
       End
       Begin VB.Menu mnuDivider 
          Caption         =   "-"
@@ -153,6 +185,8 @@ Attribute VB_Exposed = False
 Dim vt As New CVirusTotal
 Dim selli As ListItem
 Dim abort As Boolean
+Dim dlg As New clsCmnDlg
+Dim fso As New CFileSystem2
 
 Private Sub cmdAbort_Click()
     abort = True
@@ -164,6 +198,14 @@ Private Sub cmdClear_Click()
     Text2 = Empty
     Set selli = Nothing
 End Sub
+
+Private Sub cmdBrowse_Click()
+    Dim f As String
+    f = dlg.FolderDialog()
+    If Len(f) = 0 Then Exit Sub
+    txtCacheDir = f
+End Sub
+
 
 Private Sub cmdQuery_Click()
     
@@ -179,6 +221,22 @@ Private Sub cmdQuery_Click()
         Exit Sub
     End If
     
+    vt.report_cache_dir = Empty
+    
+    If chkCache.value = 1 Then
+        If Len(txtCacheDir) = 0 Then
+            chkCache.value = 0
+        Else
+            If Not fso.FolderExists(txtCacheDir) Then
+                If Not fso.buildPath(txtCacheDir) Then
+                    chkCache.value = 0
+                End If
+            End If
+        End If
+        If fso.FolderExists(txtCacheDir) Then vt.report_cache_dir = txtCacheDir
+    End If
+        
+    
     abort = False
     
     pb.Max = lv.ListItems.Count
@@ -193,7 +251,8 @@ Private Sub cmdQuery_Click()
         
         If Not scan.HadError Then
             li.SubItems(1) = scan.positives
-            li.SubItems(2) = scan.verbose_msg
+            li.SubItems(2) = scan.scan_date
+            li.SubItems(3) = scan.verbose_msg
             Set li.Tag = scan
         Else
             li.SubItems(1) = "Failure"
@@ -250,7 +309,13 @@ Private Sub Command2_Click()
     
 End Sub
 
+Private Sub Form_Unload(Cancel As Integer)
+    SaveSetting "vt", "settings", "cachedir", txtCacheDir.Text
+    SaveSetting "vt", "settings", "usecache", chkCache.value
+End Sub
+
 Private Sub mnuAddHashs_Click()
+    On Error Resume Next
     x = Clipboard.GetText
     tmp = Split(x, vbCrLf)
     For Each x In tmp
@@ -261,10 +326,15 @@ End Sub
 
 Private Sub Form_Load()
     
+    On Error Resume Next
+    
     Dim path As String
     Dim hash_mode As Boolean
     
-    lv.ColumnHeaders(3).Width = lv.Width - lv.ColumnHeaders(3).Left - 150
+    txtCacheDir = GetSetting("vt", "settings", "cachedir", "c:\VT_Cache")
+    chkCache.value = GetSetting("vt", "settings", "usecache", 0)
+    
+    lv.ColumnHeaders(4).Width = lv.Width - lv.ColumnHeaders(4).Left - 150
     
     If InStr(Command, "/bulk") > 0 Then
        Me.Show
@@ -275,14 +345,23 @@ Private Sub Form_Load()
         path = Replace(Command, """", Empty)
         If hash_mode Then path = Replace(path, "/hash", Empty)
         path = Trim(path)
+        
+        If Len(path) = 0 Then GoTo errorStartup
+            
         If hash_mode Then
             Form2.StartFromHash path
         Else
+            If Not fso.FileExists(path) Then GoTo errorStartup
             Form2.StartFromFile path
         End If
         Unload Me
     End If
     
+    Exit Sub
+errorStartup:
+    List1.AddItem "Designed to be run from right click menus in explorer."
+    List1.AddItem "You can add bulk hash lists to lookup by right click on listview"
+    Me.Show
 End Sub
 
 
@@ -307,15 +386,19 @@ End Sub
 Private Sub mnuCopyAll_Click()
     Dim li As ListItem
     Dim r
+    Dim scan As CScan
+    
+    On Error Resume Next
     
     For Each li In lv.ListItems
-        r = r & li.Text & "  Detections: " & li.SubItems(1) & vbCrLf
+        r = r & li.Text & "  Detections: " & li.SubItems(1) & "  ScanDate: " & li.SubItems(2) & vbCrLf
     Next
     
     r = r & vbCrLf & vbCrLf
     
     For Each li In lv.ListItems
-        r = r & li.Text & vbCrLf & li.Tag & vbCrLf & String(50, "-") & vbCrLf
+        Set scan = li.Tag
+        r = r & li.Text & vbCrLf & scan.GetReport() & vbCrLf & String(50, "-") & vbCrLf
     Next
     
     Clipboard.Clear
@@ -326,13 +409,18 @@ End Sub
 
 Private Sub mnuCopyResult_Click()
 
+On Error Resume Next
+
     If selli Is Nothing Then
         MsgBox "Nothing selected"
         Exit Sub
     End If
     
     Dim r As String
-    r = selli.Text & "  Detections: " & selli.SubItems(1) & vbCrLf & String(50, "-") & vbCrLf & selli.Tag
+    Dim scan As CScan
+    Set scan = selli.Tag
+    
+    r = selli.Text & "  Detections: " & selli.SubItems(1) & "  ScanDate: " & li.SubItems(2) & vbCrLf & String(50, "-") & vbCrLf & scan.GetReport()
     Clipboard.Clear
     Clipboard.SetText r
     MsgBox Len(r) & " bytes copied to clipboard"
@@ -341,11 +429,13 @@ End Sub
 
 Private Sub mnuCopyTable_Click()
 
+On Error Resume Next
+
     Dim li As ListItem
     Dim r
     
     For Each li In lv.ListItems
-        r = r & li.Text & "  Detections: " & li.SubItems(1) & vbCrLf
+        r = r & li.Text & "  Detections: " & li.SubItems(1) & "  ScanDate: " & li.SubItems(2) & vbCrLf
     Next
     
     Clipboard.Clear
@@ -361,6 +451,24 @@ Private Sub mnuRemoveSelected_Click()
         If lv.ListItems(i).Selected Then lv.ListItems.Remove i
     Next
     
+End Sub
+
+Private Sub mnuSaveReports_Click()
+    
+    On Error Resume Next
+    Dim li As ListItem
+    Dim pf As String
+    Dim scan As CScan
+    
+    pf = dlg.FolderDialog()
+    If Len(pf) = 0 Then Exit Sub
+    
+    For Each li In lv.ListItems
+        hash = li.Text
+        Set scan = li.Tag
+        fso.writeFile pf & "\VT_" & hash & ".txt", li.Text & "  Detections: " & li.SubItems(1) & "  ScanDate: " & li.SubItems(2) & vbCrLf & String(50, "-") & vbCrLf & scan.GetReport()
+    Next
+
 End Sub
 
 Private Sub mnuViewRaw_Click()

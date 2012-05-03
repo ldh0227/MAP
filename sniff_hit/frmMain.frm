@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
 Begin VB.Form frmMain 
    Caption         =   "sniff_hit"
    ClientHeight    =   8370
@@ -281,6 +281,7 @@ Dim uniqueIPs As New Collection
 Dim httpServers As New Collection
 Dim ircServers As New Collection
 Dim myIPs As New Collection
+Dim dns As New Collection
 
 Dim liHttp As ListItem
 Dim ActiveList As ListBox
@@ -345,10 +346,12 @@ Private Sub cmdStart_Click()
         Set uniqueIPs = New Collection
         Set httpServers = New Collection
         Set ircServers = New Collection
+        Set dns = New Collection
 
         lstIP.Clear
         lstIRC.Clear
         lstHTTP.Clear
+        lstDNS.Clear
         txtIRC = Empty
         lv.ListItems.Clear
     Else
@@ -505,7 +508,12 @@ Private Sub sniffer_UDPPacket(packet As CUDPPacket, Data() As Byte)
             uniqueIPs.Add .notMeIP, .notMeIP
             lstIP.AddItem .notMeIP
         End If
-        If .isDNS Then lstDNS.AddItem .DNSReqName
+        If .isDNS Then
+            If Not KeyExistsInCollection(dns, .DNSReqName) Then
+                  dns.Add .DNSReqName, CStr(.DNSReqName)
+                  lstDNS.AddItem .DNSReqName
+            End If
+        End If
     End With
 End Sub
 

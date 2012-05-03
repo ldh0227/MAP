@@ -35,14 +35,14 @@ Source: ./ShellExt\frmMain.frx; DestDir: {app}\ShellExt
 Source: ./socketTool\Project1.vbw; DestDir: {app}\socketTool
 Source: ./socketTool\Form1.frm; DestDir: {app}\socketTool
 Source: ./socketTool\Project1.vbp; DestDir: {app}\socketTool
-Source: ./fakeDNS.exe; DestDir: {app}
-Source: ./IDCDumpFix.exe; DestDir: {app}
+Source: ./fakeDNS.exe; DestDir: {app}      ; Flags: ignoreversion
+Source: ./IDCDumpFix.exe; DestDir: {app}   ; Flags: ignoreversion
 Source: ./fakeDns\Form1.frm; DestDir: {app}\fakeDns
 Source: ./fakeDns\Project1.vbw; DestDir: {app}\fakeDns
 Source: ./fakeDns\Project1.vbp; DestDir: {app}\fakeDns
-Source: ./mail_pot.exe; DestDir: {app}
-Source: ./sckTool.exe; DestDir: {app}
-Source: ./ShellExt.exe; DestDir: {app}
+Source: ./mail_pot.exe; DestDir: {app}; Flags: ignoreversion
+Source: ./sckTool.exe; DestDir: {app}        ; Flags: ignoreversion
+Source: ./ShellExt.exe; DestDir: {app}     ; Flags: ignoreversion
 Source: ./map_help.chm; DestDir: {app}
 Source: ./dependancies\vbDevKit.dll; DestDir: {win}; Flags: regserver
 Source: ./dependancies\spSubclass.dll; DestDir: {win}; Flags: regserver
@@ -58,11 +58,11 @@ Source: ./sniff_hit\frmMain.frm; DestDir: {app}\sniff_hit
 Source: ./sniff_hit\CSniffer.cls; DestDir: {app}\sniff_hit
 Source: ./sniff_hit\sniff_hit.vbp; DestDir: {app}\sniff_hit
 Source: ./sniff_hit\sniff_hit.vbw; DestDir: {app}\sniff_hit
-Source: ./sniff_hit.exe; DestDir: {app}
-Source: ./sc_log\bin\codbot.sc; DestDir: {app}\sc_log\bin
-Source: ./sc_log\bin\recv_cmd.sc; DestDir: {app}\sc_log\bin
-Source: ./sc_log\bin\recv_file.sc; DestDir: {app}\sc_log\bin
-Source: ./sc_log\bin\tftp.sc; DestDir: {app}\sc_log\bin
+Source: ./sniff_hit.exe; DestDir: {app}                          ; Flags: ignoreversion
+;Source: ./sc_log\bin\codbot.sc; DestDir: {app}\sc_log\bin
+;Source: ./sc_log\bin\recv_cmd.sc; DestDir: {app}\sc_log\bin
+;Source: ./sc_log\bin\recv_file.sc; DestDir: {app}\sc_log\bin
+;Source: ./sc_log\bin\tftp.sc; DestDir: {app}\sc_log\bin
 Source: ./sc_log\bin\sclog.exe; DestDir: {app}\sc_log\bin
 Source: ./sc_log\bin\vcrt_test.sc; DestDir: {app}\sc_log\bin
 Source: ./sc_log\hook_test\hook_test.dsw; DestDir: {app}\sc_log\hook_test
@@ -97,8 +97,8 @@ Source: ./gdiprocs.exe; DestDir: {app}
 Source: ./gdiprocs.exe; DestDir: {win}
 Source: ./jsDecode\frame.html; DestDir: {app}\jsDecode
 Source: ./jsDecode\index.html; DestDir: {app}\jsDecode
-Source: FindDll.exe; DestDir: {app}
-Source: FindDll.exe; DestDir: {win}
+Source: FindDll.exe; DestDir: {app}                      ; Flags: ignoreversion
+Source: FindDll.exe; DestDir: {win}                       ; Flags: ignoreversion
 Source: findDll\findDll.cpp; DestDir: {app}\findDll\
 Source: findDll\FindDll.sln; DestDir: {app}\findDll\
 Source: findDll\FindDll.vcproj; DestDir: {app}\findDll\
@@ -111,7 +111,7 @@ Source: VirusTotal\MD5Hash.cls; DestDir: {app}\VirusTotal\
 Source: VirusTotal\Project1.vbp; DestDir: {app}\VirusTotal\
 Source: VirusTotal\Project1.vbw; DestDir: {app}\VirusTotal\
 Source: VirusTotal\sample.txt; DestDir: {app}\VirusTotal\
-Source: virustotal.exe; DestDir: {app}
+Source: virustotal.exe; DestDir: {app}                    ; Flags: ignoreversion
 
 [Dirs]
 Name: {app}\IDCDumpFix

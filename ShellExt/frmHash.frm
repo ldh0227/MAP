@@ -6,20 +6,20 @@ Begin VB.Form frmHash
    ClientHeight    =   3765
    ClientLeft      =   45
    ClientTop       =   330
-   ClientWidth     =   9195
+   ClientWidth     =   12060
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   3765
-   ScaleWidth      =   9195
+   ScaleWidth      =   12060
    StartUpPosition =   2  'CenterScreen
    Begin MSComctlLib.ListView lv 
       Height          =   3735
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   9105
-      _ExtentX        =   16060
+      Width           =   11955
+      _ExtentX        =   21087
       _ExtentY        =   6588
       View            =   3
       LabelEdit       =   1
@@ -35,7 +35,7 @@ Begin VB.Form frmHash
       BorderStyle     =   1
       Appearance      =   1
       OLEDropMode     =   1
-      NumItems        =   3
+      NumItems        =   4
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "File"
          Object.Width           =   3528
@@ -50,12 +50,20 @@ Begin VB.Form frmHash
          Text            =   "md5"
          Object.Width           =   5292
       EndProperty
+      BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   3
+         Text            =   "CompileDate (GMT)"
+         Object.Width           =   4410
+      EndProperty
    End
    Begin VB.Menu mnuPopup 
       Caption         =   "mnuPopup"
       Visible         =   0   'False
       Begin VB.Menu mnuCopyTable 
          Caption         =   "Copy Table"
+      End
+      Begin VB.Menu mnuCopyTableCSV 
+         Caption         =   "Copy Table (CSV)"
       End
       Begin VB.Menu mnuCopyHashs 
          Caption         =   "Copy Hashs"
@@ -71,6 +79,9 @@ Begin VB.Form frmHash
       End
       Begin VB.Menu mnuMakeExtSafe 
          Caption         =   "Make All Extensions Safe"
+      End
+      Begin VB.Menu mnuCustomExtension 
+         Caption         =   "Set All Custom Extension "
       End
       Begin VB.Menu mnuSpacer33 
          Caption         =   "-"
@@ -194,6 +205,56 @@ Private Sub mnuCopyHashs_Click()
     MsgBox "Copy Complete", vbInformation
 End Sub
 
+Private Sub mnuCopyTableCSV_Click()
+    mnuCopyTable_Click
+    t = Clipboard.GetText
+    Clipboard.SetText Replace(t, vbTab, ",")
+End Sub
+
+Private Sub mnuCustomExtension_Click()
+    On Error Resume Next
+    Dim li As ListItem
+    Dim pdir As String
+    Dim i As Long
+    Dim ext As String
+    
+    ext = InputBox("Enter custom extension. Can not be blank")
+    If Len(ext) = 0 Then Exit Sub
+    If VBA.Left(ext, 1) <> "." Then ext = "." & ext
+    
+    For Each li In lv.ListItems
+        i = 1
+        fpath = li.Tag
+        fname = li.Text
+        pdir = fso.GetParentFolder(fpath) & "\"
+        
+        If InStr(fname, ".") > 0 Then
+            fname = Mid(fname, 1, InStr(fname, "."))
+        End If
+        
+        h = fname & ext
+        
+        If LCase(VBA.Right(fname, 4)) = ".txt" Then GoTo nextone  'txt files are fine..
+        If LCase(VBA.Right(fname, Len(ext))) = LCase(ext) Then GoTo nextone   'already set
+        
+        While fso.FileExists(pdir & h) 'dont delete dups, but append counter onto end..
+            h = fname & "_" & i
+            i = i + 1
+        Wend
+        
+        Name fpath As pdir & h
+    
+        li.Text = h
+        li.Tag = pdir & h
+        li.EnsureVisible
+        lv.Refresh
+        DoEvents
+        
+nextone:
+    Next
+
+End Sub
+
 Private Sub mnuDeleteDuplicates_Click()
     
     Dim li As ListItem
@@ -310,12 +371,12 @@ Private Sub mnuCopyTable_Click()
     Dim t As String
     
     For Each li In lv.ListItems
-        t = t & li.Text & vbTab & li.SubItems(1) & vbTab & li.SubItems(2) & vbCrLf
+        t = t & li.Text & vbTab & li.SubItems(1) & vbTab & li.SubItems(2) & vbTab & li.SubItems(3) & vbCrLf
     Next
     
     Clipboard.Clear
     Clipboard.SetText t
-    MsgBox "Copy Complete", vbInformation
+    'MsgBox "Copy Complete", vbInformation
     
 End Sub
 
@@ -334,6 +395,7 @@ Sub handleFile(f As String)
     Set li = lv.ListItems.Add(, , fso.FileNameFromPath(f))
     li.SubItems(1) = FileLen(f)
     li.SubItems(2) = h
+    li.SubItems(3) = GetCompileDateOrType(f)
     li.Tag = f
     
 End Sub
@@ -341,7 +403,7 @@ End Sub
 
 
 Private Sub Form_Load()
-    lv.ColumnHeaders(1).Width = lv.Width - lv.ColumnHeaders(2).Width - 400 - lv.ColumnHeaders(3).Width
+    lv.ColumnHeaders(1).Width = lv.Width - lv.ColumnHeaders(2).Width - 400 - lv.ColumnHeaders(3).Width - lv.ColumnHeaders(4).Width
 End Sub
 
 Private Sub Form_Resize()
@@ -363,8 +425,9 @@ Private Sub mnuMakeExtSafe_Click()
         pdir = fso.GetParentFolder(fpath) & "\"
         h = fname & "_"
         
-        If InStr(fname, ".") < 1 Then GoTo nextone     'no extension
-        If VBA.Right(fname, 1) = "_" Then GoTo nextone 'already safe
+        If LCase(VBA.Right(fname, 4)) = ".txt" Then GoTo nextone  'txt files are fine..
+        If InStr(fname, ".") < 1 Then GoTo nextone                'no extension
+        If VBA.Right(fname, 1) = "_" Then GoTo nextone            'already safe
         
         While fso.FileExists(pdir & h) 'dont delete dups, but append counter onto end..
             h = fname & "_" & i
@@ -390,6 +453,11 @@ Private Sub mnuRenameToMD5_Click()
     Dim li As ListItem
     Dim pdir As String
     Dim i As Long
+    Dim rlog As String
+    
+    If MsgBox("Are you sure you want to rename all of these files to their MD5 hash values?", vbYesNo) = vbNo Then
+        Exit Sub
+    End If
     
     For Each li In lv.ListItems
         i = 2
@@ -404,6 +472,7 @@ Private Sub mnuRenameToMD5_Click()
             i = i + 1
         Wend
         
+        rlog = rlog & fname & vbTab & "->" & vbTab & h & vbCrLf
         Name fpath As pdir & h
     
         li.Text = h
@@ -415,6 +484,7 @@ Private Sub mnuRenameToMD5_Click()
 nextone:
     Next
         
+    fso.WriteFile pdir & "\rename_log.txt", rlog
     
 End Sub
 

@@ -189,6 +189,10 @@ Private Function FileExists(p) As Boolean
     If Dir(p, vbNormal Or vbHidden Or vbReadOnly Or vbSystem) <> "" Then FileExists = True
 End Function
 
+Private Sub Form_Load()
+    Me.Show
+End Sub
+
 Private Sub Label3_Click()
     On Error Resume Next
     Text1 = scan.RawJson
