@@ -81,6 +81,40 @@ Function GetMySetting(key, def)
     GetMySetting = GetSetting("iDefense", "ShellExt", key, def)
 End Function
 
+Sub SaveFormSizeAnPosition(f As Form)
+    Dim s As String
+    If f.WindowState <> 0 Then Exit Sub 'vbnormal
+    s = f.Left & "," & f.Top & "," & f.Width & "," & f.Height
+    SaveMySetting f.Name & "_pos", s
+End Sub
+
+Sub RestoreFormSizeAnPosition(f As Form)
+    On Error GoTo hell
+    Dim s
+    
+    s = GetMySetting(f.Name & "_pos", "")
+    
+    If Len(s) = 0 Then Exit Sub
+    If occuranceCount(s, ",") <> 3 Then Exit Sub
+    
+    s = Split(s, ",")
+    f.Left = s(0)
+    f.Top = s(1)
+    f.Width = s(2)
+    f.Height = s(3)
+    
+    Exit Sub
+hell:
+End Sub
+
+Function occuranceCount(haystack, match) As Long
+    On Error Resume Next
+    Dim tmp
+    tmp = Split(haystack, match, , vbTextCompare)
+    occuranceCount = UBound(tmp)
+    If Err.Number <> 0 Then occuranceCount = 0
+End Function
+
 Function AryIsEmpty(ary) As Boolean
   On Error GoTo oops
     Dim i As Long
@@ -165,6 +199,10 @@ Private Function DetectFileType(buf As String) As String
         DetectFileType = "Office Document"
     ElseIf VBA.Left(buf, 4) = "L" & Chr(0) & Chr(0) & Chr(0) Then
         DetectFileType = "Link File"
+    ElseIf VBA.Left(buf, 3) = "CWS" Then
+        DetectFileType = "SWF File"
+    ElseIf VBA.Left(buf, 3) = "CWF" Then
+        DetectFileType = "SWF File"
     Else
         DetectFileType = "Unknown FileType"
     End If
