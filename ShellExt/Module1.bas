@@ -63,6 +63,44 @@ Public Type IMAGE_NT_HEADERS
     'OptionalHeader As IMAGE_OPTIONAL_HEADER
 End Type
 
+Public Enum tmMsgs
+        EM_UNDO = &HC7
+        EM_CANUNDO = &HC6
+        EM_SETWORDBREAKPROC = &HD0
+        EM_SETTABSTOPS = &HCB
+        EM_SETSEL = &HB1
+        EM_SETRECTNP = &HB4
+        EM_SETRECT = &HB3
+        EM_SETREADONLY = &HCF
+        EM_SETPASSWORDCHAR = &HCC
+        EM_SETMODIFY = &HB9
+        EM_SCROLLCARET = &HB7
+        EM_SETHANDLE = &HBC
+        EM_SCROLL = &HB5
+        EM_REPLACESEL = &HC2
+        EM_LINESCROLL = &HB6
+        EM_LINELENGTH = &HC1
+        EM_LINEINDEX = &HBB
+        EM_LINEFROMCHAR = &HC9
+        EM_LIMITTEXT = &HC5
+        EM_GETWORDBREAKPROC = &HD1
+        EM_GETTHUMB = &HBE
+        EM_GETRECT = &HB2
+        EM_GETSEL = &HB0
+        EM_GETPASSWORDCHAR = &HD2
+        EM_GETMODIFY = &HB8
+        EM_GETLINECOUNT = &HBA
+        EM_GETLINE = &HC4
+        EM_GETHANDLE = &HBD
+        EM_GETFIRSTVISIBLELINE = &HCE
+        EM_FMTLINES = &HC8
+        EM_EMPTYUNDOBUFFER = &HCD
+        EM_SETMARGINS = &HD3
+End Enum
+
+Private Declare Function SendMessage Lib "User32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+
+
 Sub push(ary, value) 'this modifies parent ary object
     On Error GoTo init
     Dim x As Long
@@ -206,4 +244,29 @@ Private Function DetectFileType(buf As String) As String
     Else
         DetectFileType = "Unknown FileType"
     End If
+End Function
+
+
+Sub ScrollToLine(t As Object, x As Integer)
+     x = x - TopLineIndex(t)
+     ScrollIncremental t, , x
+End Sub
+
+Sub ScrollIncremental(t As Object, Optional horz As Integer = 0, Optional vert As Integer = 0)
+    'lParam&  The low-order 2 bytes specify the number of vertical
+    '          lines to scroll. The high-order 2 bytes specify the
+    '          number of horizontal columns to scroll. A positive
+    '          value for lParam& causes text to scroll upward or to the
+    '          left. A negative value causes text to scroll downward or
+    '          to the right.
+    ' r&       Indicates the number of lines actually scrolled.
+    
+    Dim r As Long
+    r = CLng(&H10000 * horz) + vert
+    r = SendMessage(t.hWnd, EM_LINESCROLL, 0, ByVal r)
+
+End Sub
+
+Function TopLineIndex(x As Object) As Long
+    TopLineIndex = SendMessage(x.hWnd, EM_GETFIRSTVISIBLELINE, 0, ByVal 0&) + 1
 End Function

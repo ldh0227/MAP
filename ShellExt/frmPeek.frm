@@ -6,10 +6,10 @@ Begin VB.Form frmStrings
    ClientHeight    =   5340
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   8415
+   ClientWidth     =   8475
    LinkTopic       =   "Form2"
    ScaleHeight     =   5340
-   ScaleWidth      =   8415
+   ScaleWidth      =   8475
    StartUpPosition =   2  'CenterScreen
    Begin VB.CommandButton cmdFindAll 
       Caption         =   "All"
@@ -138,6 +138,9 @@ Dim d As New RegExp
 Dim mc As MatchCollection
 Dim m As match
 Dim ret() As String
+
+Private Declare Function LockWindowUpdate Lib "User32" (ByVal hwndLock As Long) As Long
+
 
 Sub DisplayList(data As String)
     
@@ -282,6 +285,9 @@ Sub ParseFile(fpath As String)
         setPB pointer, LOF(f)
     Loop
     
+    rtf.Text = Join(ret, vbCrLf)
+    Erase ret
+    
     Me.Caption = "Scanning for unicode strings.."
     push ret, ""
     push ret, "Unicode Strings:" & vbCrLf & String(75, "-")
@@ -307,8 +313,16 @@ Sub ParseFile(fpath As String)
     
     Close f
     
+     
     On Error Resume Next
-    rtf.Text = Join(ret, vbCrLf)
+    Dim topLine As Integer
+    
+    LockWindowUpdate rtf.hWnd 'try to make it not jump when we add more...
+    topLine = TopLineIndex(rtf)
+    rtf.Text = rtf.Text & vbCrLf & vbCrLf & Join(ret, vbCrLf)
+    ScrollToLine rtf, topLine
+    LockWindowUpdate 0
+    
     Erase ret
     Me.Show 1
    

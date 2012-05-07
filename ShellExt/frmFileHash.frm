@@ -13,6 +13,14 @@ Begin VB.Form frmFileHash
    ScaleWidth      =   5970
    ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cmdVT 
+      Caption         =   "VirusTotal"
+      Height          =   345
+      Left            =   120
+      TabIndex        =   3
+      Top             =   1200
+      Width           =   1155
+   End
    Begin VB.CommandButton cmdCopyAll 
       Caption         =   "Copy All"
       Height          =   345
@@ -92,3 +100,13 @@ Private Sub cmdCopyHash_Click()
     End
 End Sub
 
+Private Sub cmdVT_Click()
+    On Error Resume Next
+    Dim vt As String
+    vt = App.path & "\virustotal.exe"
+    If Not fso.FileExists(vt) Then
+        MsgBox "VirusTotal app not found?: " & vt, vbInformation
+        Exit Sub
+    End If
+    Shell vt & " /hash " & myMd5
+End Sub

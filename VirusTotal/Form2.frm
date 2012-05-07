@@ -159,6 +159,7 @@ Public Function StartFromFile(fpath As String)
     
     If Not FileExists(fpath) Then
         List1.AddItem "File not found"
+        End
         Exit Function
     End If
     
@@ -170,9 +171,12 @@ Public Function StartFromHash(hash As String)
     
     On Error Resume Next
     
+    txtFile.Enabled = False
+    txtFile.BackColor = &H8000000F
     
     If Len(hash) = 0 Then
         MsgBox "Error starting up from hash, no value specified?", vbInformation
+        End
         Exit Function
     End If
     
