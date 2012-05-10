@@ -324,6 +324,20 @@ Function KeyExistsInCollection(c As Collection, val As String) As Boolean
 nope: KeyExistsInCollection = False
 End Function
     
+Private Sub Form_Load()
+    
+    On Error Resume Next
+    
+    Dim c As String
+    c = Replace(Command, """", Empty)
+    If fso.FileExists(c) Then
+        f = c
+        Text2 = fso.ReadFile(f)
+        Command1_Click
+    End If
+    
+End Sub
+
 Private Sub Text2_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
 
     If Not fso.FileExists(Data.Files(1)) Then

@@ -210,10 +210,13 @@ Private WsaStrErrors As New Collection
 Public ErrorMessage As String
 Public EventWindow As Form
 
+Public PromisciousMode As Boolean
+
 Event RecievedPacket(packet As CTcpPacket, Data As String)
 Event UDPPacket(packet As CUDPPacket, Data() As Byte)
 
 Private myInterfaces As Collection
+Private ListeningIP As Long
 
 Public Function Startup(interfaceAddress As String) As Boolean
 
@@ -230,6 +233,7 @@ Public Function Startup(interfaceAddress As String) As Boolean
     sAdr.sin_family = AF_INET
     sAdr.sin_port = 0
     sAdr.sin_addr = GetHostLng(interfaceAddress)
+    ListeningIP = sAdr.sin_addr
 
     If sAdr.sin_addr = INADDR_NONE Then
         ErrorMessage = "Invalid Interface Address"
@@ -294,7 +298,12 @@ Private Sub Subclass_MessageReceived(hWnd As Long, wMsg As Long, lSocket As Long
    ReDim Preserve buf(packetsize - 1) As Byte
     
    CopyMemory udtIP, VarPtr(buf(0)), LenB(udtIP)
-   CopyMemory udtTCP, VarPtr(buf(0)) + 20, LenB(udtTCP)
+                             
+   If Not PromisciousMode Then
+        If udtIP.ip_destaddr <> ListeningIP And udtIP.ip_srcaddr <> ListeningIP Then
+            Exit Sub
+        End If
+   End If
    
    If udtIP.IP_Protocol = IPPROTO_UDP Then
         HandleUDP udtIP, buf, packetsize
@@ -302,7 +311,9 @@ Private Sub Subclass_MessageReceived(hWnd As Long, wMsg As Long, lSocket As Long
    End If
    
    If udtIP.IP_Protocol <> IPPROTO_TCP Then Exit Sub 'ignore others
-
+    
+   CopyMemory udtTCP, VarPtr(buf(0)) + 20, LenB(udtTCP)
+   
    offset = 20 + (udtTCP.DataOffset \ &H10) * 4
    datLen = packetsize - offset
     
@@ -354,7 +365,7 @@ Private Function HandleUDP(udtIP As IPHeader, buf() As Byte, packetsize As Long)
       ReDim tmp(0 To packetsize - 1)
       CopyMemory ByVal VarPtr(tmp(0)), ByVal VarPtr(buf(offset)), packetsize
   End If
-
+  
   With udp
       CopyMemory ByVal VarPtr(ip(0)), VarPtr(udtIP.ip_srcaddr), 4
       .SourceIP = ip(0) & "." & ip(1) & "." & ip(2) & "." & ip(3)

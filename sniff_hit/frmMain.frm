@@ -11,6 +11,14 @@ Begin VB.Form frmMain
    ScaleHeight     =   8370
    ScaleWidth      =   9495
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CheckBox ChkPromiscious 
+      Caption         =   "Promiscuous Mode"
+      Height          =   255
+      Left            =   3000
+      TabIndex        =   22
+      Top             =   750
+      Width           =   2445
+   End
    Begin VB.ListBox lstDNS 
       Height          =   2205
       Left            =   7740
@@ -289,6 +297,10 @@ Dim ActiveList As ListBox
 Dim userHttpPort As Long
 Dim userIRCPort As Long
 
+Private Sub ChkPromiscious_Click()
+    sniffer.PromisciousMode = IIf(ChkPromiscious.Value = 1, True, False)
+End Sub
+
 Private Sub cmdClearHttp_Click()
     If MsgBox("Are you sure you want to clear http log?", vbInformation + vbYesNo) = vbYes Then
         lv.ListItems.Clear
@@ -509,6 +521,7 @@ Private Sub sniffer_UDPPacket(packet As CUDPPacket, Data() As Byte)
             lstIP.AddItem .notMeIP
         End If
         If .isDNS Then
+            If InStr(.DNSReqName, ".domain.invalid") > 0 Then Exit Sub
             If Not KeyExistsInCollection(dns, .DNSReqName) Then
                   dns.Add .DNSReqName, CStr(.DNSReqName)
                   lstDNS.AddItem .DNSReqName
