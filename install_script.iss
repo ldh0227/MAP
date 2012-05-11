@@ -117,6 +117,7 @@ Source: loadlib\loadlib.dsp; DestDir: {app}\loadlib\
 Source: loadlib\loadlib.dsw; DestDir: {app}\loadlib\
 Source: loadlib.exe; DestDir: {app}; Flags: ignoreversion
 Source: loadlib.exe; DestDir: {win}; Flags: ignoreversion
+Source: fakedns\CStrings.cls; DestDir: {app}\fakedns\;
 
 [Dirs]
 Name: {app}\IDCDumpFix

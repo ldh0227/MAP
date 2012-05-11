@@ -5,11 +5,34 @@ Begin VB.Form Form1
    ClientHeight    =   4785
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   7140
+   ClientWidth     =   9870
    LinkTopic       =   "Form1"
    ScaleHeight     =   4785
-   ScaleWidth      =   7140
+   ScaleWidth      =   9870
    StartUpPosition =   3  'Windows Default
+   Begin VB.CommandButton cmdClear 
+      Caption         =   "Clear"
+      Height          =   315
+      Left            =   7680
+      TabIndex        =   8
+      Top             =   4440
+      Width           =   885
+   End
+   Begin VB.CommandButton cmdCopy 
+      Caption         =   "Copy"
+      Height          =   285
+      Left            =   8970
+      TabIndex        =   7
+      Top             =   4440
+      Width           =   855
+   End
+   Begin VB.ListBox List1 
+      Height          =   4350
+      Left            =   7170
+      TabIndex        =   6
+      Top             =   30
+      Width           =   2655
+   End
    Begin VB.TextBox txtIp 
       Enabled         =   0   'False
       Height          =   315
@@ -161,6 +184,7 @@ Private busy As Boolean
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As Long)
 
+Dim strings As New CStrings
 
 Function BuildAnswer() As Boolean
     On Error GoTo failed
@@ -190,6 +214,22 @@ failed:
 
 End Function
 
+
+Private Sub cmdClear_Click()
+    On Error Resume Next
+    List1.Clear
+    txtLog.Text = Empty
+End Sub
+
+Private Sub cmdCopy_Click()
+    On Error Resume Next
+    Dim tmp, i
+    For i = 0 To List1.ListCount
+        tmp = tmp & List1.List(i) & vbCrLf
+    Next
+    Clipboard.Clear
+    Clipboard.SetText tmp
+End Sub
 
 Private Sub cmdListen_Click()
       
@@ -247,8 +287,8 @@ End Sub
 
 Private Sub Form_Resize()
     On Error Resume Next
-    Me.Width = 7360
-    Me.Height = 5190
+    'Me.Width = 7360
+    'Me.Height = 5190
 End Sub
 
 Private Sub Option1_Click()
@@ -281,7 +321,7 @@ Private Sub ws_DataArrival(index As Integer, ByVal bytesTotal As Long)
     
     busy = True
     ws(1).GetData b()
-    Log b(), "Request:"
+    Log b(), "Request:  ( " & Now & " )"
     
     'todo: check what kind of query it is support mx and a
     'but for now just blindly reply as if it was a an A record request
@@ -314,12 +354,40 @@ hell:
   DoEvents
 End Sub
 
+Sub Extract(b() As Byte)
+    On Error Resume Next
+    Dim tmp, x, found, i
+    Dim y As String
+    
+    y = StrConv(b(), vbUnicode)
+    For i = 2 To 13 'cheat yet functional..
+        y = Replace(y, Chr(i), ".")
+    Next
+    
+    tmp = strings.FromString(y)
+    tmp = Split(tmp, vbCrLf)
+    For Each x In tmp
+        found = False
+        While VBA.Left(x, 1) = "."
+            x = Mid(x, 2)
+        Wend
+        For i = 0 To List1.ListCount
+            If UCase(List1.List(i)) = UCase(Trim(x)) Then
+                found = True
+                Exit For
+            End If
+        Next
+        If Not found Then List1.AddItem Trim(x)
+    Next
+    
+End Sub
 
 
 Sub Log(it() As Byte, Optional header As String)
     
     On Error Resume Next
     
+    Extract it()
     If Len(header) > 0 Then txtLog.SelText = IIf(Len(txtLog) > 0, vbCrLf & vbCrLf, "") & header
         
     txtLog.SelText = IIf(Len(txtLog) > 0, vbCrLf & vbCrLf, "") & hexdump(StrConv(it, vbUnicode))
