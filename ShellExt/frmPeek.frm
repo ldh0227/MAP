@@ -6,11 +6,27 @@ Begin VB.Form frmStrings
    ClientHeight    =   5340
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   8475
+   ClientWidth     =   12810
    LinkTopic       =   "Form2"
    ScaleHeight     =   5340
-   ScaleWidth      =   8475
+   ScaleWidth      =   12810
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CheckBox chkFilter 
+      Caption         =   "Filter Results"
+      Height          =   285
+      Left            =   9840
+      TabIndex        =   11
+      Top             =   30
+      Width           =   1275
+   End
+   Begin VB.CheckBox chkShowOffsets 
+      Caption         =   "Show Offsets"
+      Height          =   285
+      Left            =   8430
+      TabIndex        =   10
+      Top             =   30
+      Width           =   1365
+   End
    Begin VB.CommandButton cmdFindAll 
       Caption         =   "All"
       Height          =   315
@@ -78,6 +94,7 @@ Begin VB.Form frmStrings
       _ExtentX        =   14737
       _ExtentY        =   8281
       _Version        =   393217
+      Enabled         =   -1  'True
       HideSelection   =   0   'False
       ScrollBars      =   3
       TextRTF         =   $"frmPeek.frx":0000
@@ -90,6 +107,24 @@ Begin VB.Form frmStrings
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
+   End
+   Begin VB.Label Label3 
+      Caption         =   "show"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   -1  'True
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00FF0000&
+      Height          =   255
+      Left            =   11160
+      TabIndex        =   12
+      Top             =   60
+      Width           =   555
    End
    Begin VB.Label Label2 
       Caption         =   "Min Size"
@@ -138,6 +173,9 @@ Dim d As New RegExp
 Dim mc As MatchCollection
 Dim m As match
 Dim ret() As String
+Dim lines As Long
+Dim formLoaded As Boolean
+Dim filtered() As String
 
 Private Declare Function LockWindowUpdate Lib "User32" (ByVal hwndLock As Long) As Long
 
@@ -149,6 +187,16 @@ Sub DisplayList(data As String)
     
 End Sub
 
+
+Private Sub chkEntropy_Click()
+     If Not formLoaded Then Exit Sub
+     ParseFile curFile, True
+End Sub
+
+Private Sub chkShowOffsets_Click()
+    If Not formLoaded Then Exit Sub
+    ParseFile curFile, True
+End Sub
 
 Private Sub cmdFindAll_Click()
     On Error Resume Next
@@ -225,6 +273,15 @@ Private Sub Form_Load()
     pb.value = 0
     RestoreFormSizeAnPosition Me
     Me.Visible = True
+    chkShowOffsets.value = GetMySetting("offsests", 1)
+    chkFilter.value = GetMySetting("Filter", 0)
+    formLoaded = True
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+   SaveFormSizeAnPosition Me
+   SaveMySetting "offsests", chkShowOffsets.value
+   SaveMySetting "Filter", chkFilter.value
 End Sub
 
 Private Sub Form_Resize()
@@ -241,19 +298,24 @@ End Sub
  End Sub
 
 
-Sub ParseFile(fpath As String)
-    On Error GoTo hell
+Sub ParseFile(fpath As String, Optional force As Boolean = False)
+    'On Error GoTo hell
     
     Dim f As Long, pointer As Long
     Dim buf()  As Byte
     Dim x As Long
+    
+    If Not formLoaded Then Form_Load
+        
+    Erase ret
+    Erase filtered
     
     f = FreeFile
     curFile = fpath
     
     If Not IsNumeric(txtMinLen) Then txtMinLen = 4
     
-    If lastSize = txtMinLen Then Exit Sub
+    'If Not force Then If lastSize = txtMinLen Then Exit Sub
     lastSize = CLng(txtMinLen)
     
     If Not fso.FileExists(fpath) Then
@@ -263,6 +325,7 @@ Sub ParseFile(fpath As String)
     
     'd.Pattern = "[a-z,A-Z,0-9 /?.\-_=+$\\@!*\(\)#]{4,}" 'ascii string search
     d.Pattern = "[\w0-9 /?.\-_=+$\\@!*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,]{" & txtMinLen & ",}"
+    'd.Pattern = "[\w0-9 /?.\-_=+$\\@!*\(\)#%&\|\[\]:;'""<>]{" & txtMinLen & ",}"
     d.Global = True
     
     Me.Caption = "Scanning for ASCII Strings..."
@@ -285,7 +348,9 @@ Sub ParseFile(fpath As String)
         setPB pointer, LOF(f)
     Loop
     
+    lines = UBound(ret)
     rtf.Text = Join(ret, vbCrLf)
+    
     Erase ret
     
     Me.Caption = "Scanning for unicode strings.."
@@ -294,6 +359,7 @@ Sub ParseFile(fpath As String)
     
     'd.Pattern = "([\w0-9 /?.\-=+$\\@!*\(\)#][\x00]){4,}"
     d.Pattern = "([\w0-9 /?.\-=+$\\@!\*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,][\x00]){" & txtMinLen & ",}"
+    'd.Pattern = "([\w0-9 /?.\-_=+$\\@!*\(\)#%&\|\[\]:;'""<>][\x00]){" & txtMinLen & ",}"
     
     ReDim buf(9000)
     pointer = 1
@@ -312,11 +378,11 @@ Sub ParseFile(fpath As String)
     pb.value = 0
     
     Close f
-    
      
     On Error Resume Next
     Dim topLine As Integer
     
+    lines = lines + UBound(ret)
     LockWindowUpdate rtf.hWnd 'try to make it not jump when we add more...
     topLine = TopLineIndex(rtf)
     rtf.Text = rtf.Text & vbCrLf & vbCrLf & Join(ret, vbCrLf)
@@ -324,9 +390,13 @@ Sub ParseFile(fpath As String)
     LockWindowUpdate 0
     
     Erase ret
+    Me.Caption = lines & " matches found..."
     Me.Show 1
    
-        
+    If chkFilter.value = 1 Then
+        Me.Caption = Me.Caption & "  ( " & UBound(filtered) & " results filtered)"
+    End If
+    
 Exit Sub
 hell:
       MsgBox "Error getting strings: " & Err.Description, vbExclamation
@@ -338,12 +408,22 @@ End Sub
 
 Private Sub Search(buf() As Byte, offset As Long)
     Dim b As String
+    Dim o As String
     
     b = StrConv(buf, vbUnicode)
     Set mc = d.Execute(b)
     
     For Each m In mc
-        push ret(), pad(m.FirstIndex + offset - 1) & "  " & Replace(m.value, Chr(0), Empty)
+        o = Empty
+        If chkFilter.value = 1 Then
+            If Not Filter(m.value) Then
+                If chkShowOffsets.value = 1 Then o = pad(m.FirstIndex + offset - 1) & "  "
+                push ret(), o & Replace(m.value, Chr(0), Empty)
+            End If
+        Else
+            If chkShowOffsets.value = 1 Then o = pad(m.FirstIndex + offset - 1) & "  "
+            push ret(), o & Replace(m.value, Chr(0), Empty)
+        End If
     Next
     
 End Sub
@@ -357,6 +437,161 @@ Function pad(x, Optional leng = 8)
     pad = x
 End Function
 
-Private Sub Form_Unload(Cancel As Integer)
-    SaveFormSizeAnPosition Me
+'Function ApplyFilters(r() As String) As String()
+'    Dim x, out() As String
+'    Dim i, max
+'
+'    On Error Resume Next
+'
+'    max = UBound(r)
+'    pb.value = 0
+'    Me.Caption = "Applying filters..."
+'
+'    For Each x In r
+'        If toManySpecialChars(x) Then
+'            push filtered, x
+'        ElseIf isJunk(x) Then
+'            push filtered, x
+'        ElseIf toManyNumbers(x) Then
+'            push filtered, x
+'        Else
+'            push out, x
+'        End If
+'        i = i + 1
+'        setPB i, max
+'    Next
+'
+'    ApplyFilters = out
+'    pb.value = 0
+'
+'End Function
+
+Function Filter(x As String) As Boolean
+    
+    
+    On Error Resume Next
+    Dim f As String
+    
+    If InStr(x, "http://") > 0 Then
+        Filter = False
+    ElseIf toManySpecialChars(x) Then
+        If isIde() Then f = vbTab & "(SpecialCharsFilter)"
+        push filtered, x & f
+        Filter = True
+    ElseIf toManyRepeats(x) Then
+        If isIde() Then f = vbTab & "(RepeatFilter)"
+        push filtered, x & f
+        Filter = True
+    ElseIf toManyNumbers(x) Then
+        If isIde() Then f = vbTab & "(NumberFilter)"
+        push filtered, x & f
+        Filter = True
+    Else
+        Filter = False
+    End If
+ 
+End Function
+
+Function isIde() As Boolean
+    On Error GoTo hell
+    Debug.Print 1 / 0
+    Exit Function
+hell: isIde = True
+End Function
+
+Function toManyRepeats(ByVal s As String) As Boolean
+
+    Dim os As String
+    Dim hits As Long
+    Dim pcent
+    
+    os = s 'for debugging sake
+    
+    If Len(s) > 20 Then
+        toManyRepeats = False
+        Exit Function
+    End If
+    
+    Dim b() As Byte
+    b() = StrConv(s, vbFromUnicode, LANG_US)
+    
+    For i = 0 To UBound(b)
+        If InStr(1, s, Chr(b(i))) > 0 Then
+            s = Replace(s, Chr(b(i)), Empty)
+            hits = hits + 1
+        End If
+        If Len(s) = 0 Then Exit For
+    Next
+    
+    sl = UBound(b) + 1 'original length
+    fl = hits
+    
+    pcent = fl / sl
+    
+    If pcent < 0.54445 Then toManyRepeats = True
+        
+End Function
+
+Function toManySpecialChars(ByVal s) As Boolean
+
+    'Const c = "/?.-_=+$@!*()#%~`^&|{}[]:;'""<>\,]"
+    Const c = "?-_=+$@!*()#~`^&|{}[]:;'""<>,]" 'javascript fragments will trigger this...
+    
+    Dim sl As Long
+    Dim fl As Long
+    Dim hits As Long
+    Dim pcent As Long
+    
+    Dim cc
+    
+    sl = Len(s)
+    
+    For i = 1 To Len(c)
+        cc = Mid(c, i, 1)
+        s = Replace(s, cc, Empty)
+    Next
+       
+    fl = Len(s)
+    pcent = 100 - ((fl / sl) * 100)
+    
+    If pcent <= 20 Then
+        toManySpecialChars = False
+    Else
+        toManySpecialChars = True
+    End If
+    
+End Function
+
+Function toManyNumbers(ByVal s) As Boolean
+    
+    Dim sl As Long
+    Dim fl As Long
+    Dim hits As Long
+    Dim pcent As Long
+    
+    Dim cc
+    
+    sl = Len(s)
+    
+    For i = 1 To 9
+        s = Replace(s, CStr(i), Empty)
+    Next
+       
+    fl = Len(s)
+    pcent = 100 - ((fl / sl) * 100)
+    
+    If pcent <= 20 Then
+        toManyNumbers = False
+    Else
+        toManyNumbers = True
+    End If
+    
+End Function
+
+Private Sub Label3_Click()
+    On Error Resume Next
+    Dim f As String
+    f = fso.GetFreeFileName(Environ("temp"))
+    fso.WriteFile f, Join(filtered, vbCrLf)
+    Shell "notepad.exe """ & f & """", vbNormalFocus
 End Sub
