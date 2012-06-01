@@ -45,7 +45,7 @@ Source: ./sckTool.exe; DestDir: {app}; Flags: ignoreversion
 Source: ./ShellExt.exe; DestDir: {app}; Flags: ignoreversion
 Source: ./map_help.chm; DestDir: {app}
 Source: ./dependancies\vbDevKit.dll; DestDir: {win}; Flags: regserver
-Source: ./dependancies\spSubclass.dll; DestDir: {win}; Flags: regserver
+Source: ./dependancies\spSubclass2.dll; DestDir: {win}; Flags: regserver
 Source: ./dependancies\MSWINSCK.OCX; DestDir: {win}; Flags: uninsneveruninstall regserver promptifolder
 Source: ./dependancies\mscomctl.ocx; DestDir: {win}; Flags: uninsneveruninstall regserver promptifolder
 Source: ./dependancies\RICHTX32.OCX; DestDir: {win}; Flags: uninsneveruninstall regserver promptifolder

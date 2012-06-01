@@ -11,18 +11,24 @@ Begin VB.Form frmStrings
    ScaleHeight     =   5340
    ScaleWidth      =   12810
    StartUpPosition =   2  'CenterScreen
+   Begin VB.Timer tmrReRun 
+      Enabled         =   0   'False
+      Interval        =   200
+      Left            =   9300
+      Top             =   -30
+   End
    Begin VB.CheckBox chkFilter 
       Caption         =   "Filter Results"
       Height          =   285
-      Left            =   9840
+      Left            =   11370
       TabIndex        =   11
       Top             =   30
-      Width           =   1275
+      Width           =   255
    End
    Begin VB.CheckBox chkShowOffsets 
       Caption         =   "Show Offsets"
       Height          =   285
-      Left            =   8430
+      Left            =   9900
       TabIndex        =   10
       Top             =   30
       Width           =   1365
@@ -38,26 +44,26 @@ Begin VB.Form frmStrings
    Begin VB.CommandButton cmdRescan 
       Caption         =   "Rescan"
       Height          =   315
-      Left            =   7620
+      Left            =   7770
       TabIndex        =   8
-      Top             =   30
+      Top             =   0
       Width           =   735
    End
    Begin VB.TextBox txtMinLen 
       Height          =   285
-      Left            =   6930
+      Left            =   7230
       TabIndex        =   7
       Text            =   "6"
-      Top             =   30
-      Width           =   615
+      Top             =   0
+      Width           =   465
    End
    Begin MSComctlLib.ProgressBar pb 
       Height          =   225
       Left            =   60
       TabIndex        =   5
       Top             =   330
-      Width           =   8325
-      _ExtentX        =   14684
+      Width           =   8295
+      _ExtentX        =   14631
       _ExtentY        =   397
       _Version        =   393216
       Appearance      =   1
@@ -79,6 +85,15 @@ Begin VB.Form frmStrings
       Width           =   855
    End
    Begin VB.TextBox Text1 
+      BeginProperty Font 
+         Name            =   "Courier New"
+         Size            =   11.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   315
       Left            =   540
       TabIndex        =   2
@@ -108,8 +123,8 @@ Begin VB.Form frmStrings
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin VB.Label Label3 
-      Caption         =   "show"
+   Begin VB.Label chkResetMin 
+      Caption         =   "save min"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -121,17 +136,35 @@ Begin VB.Form frmStrings
       EndProperty
       ForeColor       =   &H00FF0000&
       Height          =   255
-      Left            =   11160
+      Left            =   8550
+      TabIndex        =   13
+      Top             =   30
+      Width           =   675
+   End
+   Begin VB.Label Label3 
+      Caption         =   "Filter Results"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   -1  'True
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00FF0000&
+      Height          =   255
+      Left            =   11640
       TabIndex        =   12
       Top             =   60
-      Width           =   555
+      Width           =   1125
    End
    Begin VB.Label Label2 
       Caption         =   "Min Size"
       Height          =   255
-      Left            =   6300
+      Left            =   6600
       TabIndex        =   6
-      Top             =   60
+      Top             =   30
       Width           =   645
    End
    Begin VB.Label Label1 
@@ -176,7 +209,10 @@ Dim ret() As String
 Dim lines As Long
 Dim formLoaded As Boolean
 Dim filtered() As String
+Dim abort As Boolean
+Dim running As Boolean
 
+Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 Private Declare Function LockWindowUpdate Lib "User32" (ByVal hwndLock As Long) As Long
 
 
@@ -191,6 +227,20 @@ End Sub
 Private Sub chkEntropy_Click()
      If Not formLoaded Then Exit Sub
      ParseFile curFile, True
+End Sub
+
+Private Sub chkResetMin_Click()
+
+    If Not IsNumeric(txtMinLen) Then
+        MsgBox "Minimum String Length must be numeric", vbInformation
+        Exit Sub
+    End If
+    
+    On Error Resume Next
+    minStrLen = CLng(txtMinLen)
+    If Len(minStrLen) = 0 Then minStrLen = 4
+    SaveMySetting "minStrLen", minStrLen
+    
 End Sub
 
 Private Sub chkShowOffsets_Click()
@@ -279,9 +329,11 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+   abort = True
    SaveFormSizeAnPosition Me
    SaveMySetting "offsests", chkShowOffsets.value
    SaveMySetting "Filter", chkFilter.value
+   End
 End Sub
 
 Private Sub Form_Resize()
@@ -323,6 +375,14 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         GoTo done
     End If
     
+    If running Then
+        abort = True
+        tmrReRun.Enabled = True 'relaunch in 200ms
+        Exit Sub
+    End If
+    
+    running = True
+        
     'd.Pattern = "[a-z,A-Z,0-9 /?.\-_=+$\\@!*\(\)#]{4,}" 'ascii string search
     d.Pattern = "[\w0-9 /?.\-_=+$\\@!*\(\)#%~`\^&\|\{\}\[\]:;'""<>\,]{" & txtMinLen & ",}"
     'd.Pattern = "[\w0-9 /?.\-_=+$\\@!*\(\)#%&\|\[\]:;'""<>]{" & txtMinLen & ",}"
@@ -339,6 +399,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     
     pb.value = 0
     Do While pointer < LOF(f)
+        If abort Then GoTo aborting
         pointer = Seek(f)
         x = LOF(f) - pointer
         If x < 1 Then Exit Do
@@ -367,6 +428,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     
     pb.value = 0
     Do While pointer < LOF(f)
+        If abort Then GoTo aborting
         pointer = Seek(f)
         x = LOF(f) - pointer
         If x < 1 Then Exit Do
@@ -397,6 +459,8 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         Me.Caption = Me.Caption & "  ( " & UBound(filtered) & " results filtered)"
     End If
     
+    running = False
+    
 Exit Sub
 hell:
       MsgBox "Error getting strings: " & Err.Description, vbExclamation
@@ -404,6 +468,12 @@ hell:
 done:
       'Unload Me
       End
+      
+aborting:
+      running = False
+      abort = False
+      pb.value = 0
+      
 End Sub
 
 Private Sub Search(buf() As Byte, offset As Long)
@@ -415,6 +485,7 @@ Private Sub Search(buf() As Byte, offset As Long)
     
     For Each m In mc
         o = Empty
+        If abort Then Exit Sub
         If chkFilter.value = 1 Then
             If Not Filter(m.value) Then
                 If chkShowOffsets.value = 1 Then o = pad(m.FirstIndex + offset - 1) & "  "
@@ -591,7 +662,17 @@ End Function
 Private Sub Label3_Click()
     On Error Resume Next
     Dim f As String
-    f = fso.GetFreeFileName(Environ("temp"))
-    fso.WriteFile f, Join(filtered, vbCrLf)
-    Shell "notepad.exe """ & f & """", vbNormalFocus
+    If AryIsEmpty(filtered) Then
+        MsgBox "No results have been filtered", vbInformation
+    Else
+        f = fso.GetFreeFileName(Environ("temp"))
+        fso.WriteFile f, "Results filtered from main display: " & vbCrLf & vbCrLf & Join(filtered, vbCrLf)
+        Shell "notepad.exe """ & f & """", vbNormalFocus
+    End If
+End Sub
+
+
+Private Sub tmrReRun_Timer()
+    tmrReRun.Enabled = False
+    ParseFile curFile
 End Sub

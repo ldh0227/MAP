@@ -1,10 +1,10 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
-Reference=*\G{60FF6824-F68B-4DF1-9ECF-6F0893AAD2B8}#1.2#0#C:\WINDOWS\spSubclass.dll#SandSprite_SubClass Component
+Reference=*\G{C2900446-C60F-4066-9FB6-B5619E959E89}#1.0#0#C:\WINDOWS\spSubclass2.dll#SandSprite_SubClass2 Component
+Object={831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0; mscomctl.ocx
 Class=CSniffer; CSniffer.cls
 Class=CTcpPacket; CTcpPacket.cls
 Form=frmData.frm
-Object={831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0; mscomctl.ocx
 Form=frmMain.frm
 Class=CUDPPacket; CUdpPacket.cls
 IconForm="frmMain"

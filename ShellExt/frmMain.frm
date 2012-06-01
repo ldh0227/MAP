@@ -82,7 +82,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 '
-'Author: david@idefense.com
+'Author: dzzie@yahoo.com
 '
 'Purpose: small utility to add 3 shell extensions to explorer right click
 '         context menus.

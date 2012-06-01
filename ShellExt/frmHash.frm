@@ -3,21 +3,32 @@ Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
 Begin VB.Form frmHash 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Directory File Hasher - Right Click on ListView for Menu Options"
-   ClientHeight    =   3765
+   ClientHeight    =   4080
    ClientLeft      =   45
    ClientTop       =   330
    ClientWidth     =   12060
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3765
+   ScaleHeight     =   4080
    ScaleWidth      =   12060
    StartUpPosition =   2  'CenterScreen
+   Begin MSComctlLib.ProgressBar pb 
+      Height          =   225
+      Left            =   30
+      TabIndex        =   1
+      Top             =   0
+      Width           =   11955
+      _ExtentX        =   21087
+      _ExtentY        =   397
+      _Version        =   393216
+      Appearance      =   1
+   End
    Begin MSComctlLib.ListView lv 
       Height          =   3735
       Left            =   0
       TabIndex        =   0
-      Top             =   0
+      Top             =   240
       Width           =   11955
       _ExtentX        =   21087
       _ExtentY        =   6588
@@ -126,9 +137,15 @@ Attribute VB_Exposed = False
 
 '7-6-05 Added Delete All Duplicates option
 '4-19-12 moved buttons to right click menu options, integrated VirusTotal.exe options
+'5.17.12 added progress bar, fixed integer overflow in vbDevKit.CWinHash
 
 Dim path As String
-
+Sub setpb(cur, max)
+    On Error Resume Next
+    pb.value = (cur / max) * 100
+    Me.Refresh
+    DoEvents
+End Sub
 
 Sub HashDir(dPath As String)
    
@@ -148,9 +165,7 @@ Sub HashDir(dPath As String)
         MsgBox "Folder not found: " & dPath
         GoTo done
     End If
-        
-    'MsgBox "getting files"
-     
+             
     f() = fso.GetFolderFiles(dPath)
     
     If AryIsEmpty(f) Then
@@ -159,11 +174,14 @@ Sub HashDir(dPath As String)
     End If
      
     'MsgBox "Going to scan " & UBound(f) & " files"
-     
+    pb.value = 0
+    Me.Visible = True
+    
     For i = 0 To UBound(f)
          handleFile f(i)
+         setpb i, UBound(f)
     Next
-    
+    pb.value = 0
     'MsgBox "ready to show"
      
     On Error Resume Next
@@ -267,11 +285,13 @@ Private Sub mnuDeleteDuplicates_Click()
     
     For Each li In lv.ListItems
         h = li.SubItems(2)
-        If KeyExistsInCollection(hashs, h) Then
-            li.Tag = "DeleteMe"
-        Else
-            li.Tag = ""
-            hashs.Add h, h
+        If InStr(h, "Error") < 1 Then
+            If KeyExistsInCollection(hashs, h) Then
+                li.Tag = "DeleteMe"
+            Else
+                li.Tag = ""
+                hashs.Add h, h
+            End If
         End If
     Next
         
@@ -383,13 +403,16 @@ End Sub
 Sub handleFile(f As String)
     Dim h  As String
     Dim li As ListItem
-     
+    Dim e
+    
+    On Error Resume Next
+    
     h = LCase(hash.HashFile(f))
     
     If Len(h) = 0 Then
-        'MsgBox "ok had hash error"
-        MsgBox "Hash Error: " & hash.error_message
-        Err.Raise 1, "HandleFile", "HashError"
+        e = Split(hash.error_message, "-")
+        e = Replace(e(UBound(e)), vbCrLf, Empty)
+        h = "Error: " & e 'library error...can happen if filesize > maxlong i think?
     End If
     
     Set li = lv.ListItems.Add(, , fso.FileNameFromPath(f))
@@ -400,8 +423,6 @@ Sub handleFile(f As String)
     
 End Sub
 
-
-
 Private Sub Form_Load()
     lv.ColumnHeaders(1).Width = lv.Width - lv.ColumnHeaders(2).Width - 400 - lv.ColumnHeaders(3).Width - lv.ColumnHeaders(4).Width
 End Sub
@@ -410,6 +431,7 @@ Private Sub Form_Resize()
     On Error Resume Next
     lv.Width = Me.Width - lv.Left - 140
     lv.Height = Me.Height - lv.Top - 450
+    pb.Width = lv.Width
 End Sub
 
 Private Sub mnuMakeExtSafe_Click()
@@ -466,6 +488,7 @@ Private Sub mnuRenameToMD5_Click()
         h = li.SubItems(2)
         pdir = fso.GetParentFolder(fpath) & "\"
         
+        If InStr(h, "Error") >= 1 Then GoTo nextone
         If LCase(fname) = LCase(h) Then GoTo nextone
         While fso.FileExists(pdir & h) 'dont delete dups, but append counter onto end..
             h = li.SubItems(2) & "_" & i
@@ -495,7 +518,9 @@ Private Sub mnuVTAll_Click()
     Dim t As String
     
     For Each li In lv.ListItems
-        t = t & li.SubItems(2) & vbCrLf
+        If InStr(h, "Error") < 1 Then
+             t = t & li.SubItems(2) & vbCrLf
+        End If
     Next
     
     If Len(t) = 0 Then Exit Sub
@@ -516,7 +541,7 @@ Private Sub mnuVTLookupSelected_Click()
     For Each li In lv.ListItems
         If li.Selected Then
             h = li.SubItems(2)
-            If Len(h) > 0 Then
+            If Len(h) > 0 And InStr(h, "Error") < 1 Then
                 push hashs, li.SubItems(2)
                 i = i + 1
             End If

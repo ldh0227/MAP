@@ -201,7 +201,7 @@ Private Enum WsaError
 End Enum
 
 Private hSocket As Long
-Private WithEvents Subclass As clsSubClass
+Private WithEvents Subclass As CSubclass2
 Attribute Subclass.VB_VarHelpID = -1
 Private WskMsg As Long
 Private hWnd As Long
@@ -425,7 +425,7 @@ Private Sub Class_Initialize()
     WSAStartup &H202, WSAInfo
     WskMsg = RegisterWindowMessage("MyWindowMessage")
     
-    Set Subclass = New clsSubClass
+    Set Subclass = New CSubclass2
     
     WsaStrErrors.Add "WSABASEERR", "id:" & WSABASEERR
     WsaStrErrors.Add "WSAEINTR", "id:" & WSAEINTR

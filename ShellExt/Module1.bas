@@ -199,7 +199,7 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
             Get f, 1, buf()
             Close f
             sbuf = StrConv(buf(), vbUnicode, LANG_US)
-            GetCompileDateOrType = DetectFileType(sbuf)
+            GetCompileDateOrType = DetectFileType(sbuf, fpath)
             out_isType = True
             Exit Function
         End If
@@ -210,7 +210,7 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
             Get f, 1, buf()
             Close f
             sbuf = StrConv(buf(), vbUnicode, LANG_US)
-            GetCompileDateOrType = DetectFileType(sbuf)
+            GetCompileDateOrType = DetectFileType(sbuf, fpath)
             out_isType = True
             Exit Function
         End If
@@ -228,7 +228,10 @@ hell:
    
 End Function
 
-Private Function DetectFileType(buf As String) As String
+Private Function DetectFileType(buf As String, fname As String) As String
+    Dim dot As Long
+    On Error GoTo hell
+    
     If VBA.Left(buf, 2) = "PK" Then
         DetectFileType = "Zip file"
     ElseIf InStr(1, buf, "%PDF", vbTextCompare) > 0 Then
@@ -242,8 +245,18 @@ Private Function DetectFileType(buf As String) As String
     ElseIf VBA.Left(buf, 3) = "CWF" Then
         DetectFileType = "SWF File"
     Else
-        DetectFileType = "Unknown FileType"
+        dot = InStrRev(fname, ".")
+        If dot > 0 And dot <> Len(fname) Then
+            DetectFileType = Mid(fname, dot + 1) & " File"
+        Else
+            DetectFileType = "Unknown File Type"
+        End If
     End If
+    
+    Exit Function
+hell: DetectFileType = "Unknown FileType" '<-- subtle error identifier in missing space...
+      Err.Clear
+    
 End Function
 
 
