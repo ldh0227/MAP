@@ -248,6 +248,7 @@ Private Function DetectFileType(buf As String, fname As String) As String
         dot = InStrRev(fname, ".")
         If dot > 0 And dot <> Len(fname) Then
             DetectFileType = Mid(fname, dot + 1) & " File"
+            If Len(DetectFileType) > 5 Then DetectFileType = "Unknown File Type"
         Else
             DetectFileType = "Unknown File Type"
         End If

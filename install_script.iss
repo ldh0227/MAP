@@ -117,7 +117,9 @@ Source: loadlib\loadlib.dsp; DestDir: {app}\loadlib\
 Source: loadlib\loadlib.dsw; DestDir: {app}\loadlib\
 Source: loadlib.exe; DestDir: {app}; Flags: ignoreversion
 Source: loadlib.exe; DestDir: {win}; Flags: ignoreversion
-Source: fakedns\CStrings.cls; DestDir: {app}\fakedns\;
+Source: fakedns\CStrings.cls; DestDir: {app}\fakedns\
+Source: proc_watch.exe; DestDir: {app}
+Source: dirwatch_ui.exe; DestDir: {app}
 
 [Dirs]
 Name: {app}\IDCDumpFix
@@ -167,6 +169,8 @@ Name: {group}\Apps\jsDecode.html; Filename: {app}\jsDecode\index.html
 Name: {group}\src\jsDecode; Filename: {app}\jsDecode\
 Name: {group}\src\findDll; Filename: {app}\findDll\FindDll.vcproj
 Name: {group}\src\VirusTotal.vbp; Filename: {app}\VirusTotal\Project1.vbp
+Name: {group}\Apps\ProcWatch; Filename: {app}\proc_watch.exe
+Name: {group}\App\DirWatch; Filename: {app}\dirwatch_ui.exe
 
 [CustomMessages]
 NameAndVersion=%1 version %2
