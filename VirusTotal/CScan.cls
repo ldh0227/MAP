@@ -53,8 +53,11 @@ Public Function GetReport() As String
         tmp = verbose_msg
     Else
         If positives = 0 Then
-            tmp = "File had no detections"
+            tmp = "File had no detections" & vbCrLf & "Scan Date: " & Me.scan_date
         Else
+            tmp = "Scan Date:   " & Me.scan_date & vbCrLf
+            tmp = tmp & "Hash:        " & Me.md5 & vbCrLf
+            tmp = tmp & String(30, "-") & vbCrLf
             For Each r In results
                 If r.detected Then
                     tmp = tmp & r.PaddedScanner() & r.result & vbCrLf
@@ -125,6 +128,8 @@ Public Sub ParseResponse(json As String)
         CallByName Me, "setbyname", VbMethod, name, value
 nextone:
     Next
+    
+    If Right(Me.md5, 1) = "}" Then Me.md5 = Left(Me.md5, Len(Me.md5) - 1)
     
     DoEvents
     
