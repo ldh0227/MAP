@@ -19,7 +19,7 @@ Option Explicit
 
 Global fso As New clsFileSystem
 Global hash As New CWinHash
-Global dlg As New clsCmnDlg
+Global dlg As New CCmnDlg 'clsCmnDlg
 Global minStrLen As Long
 Global Const LANG_US = &H409
 

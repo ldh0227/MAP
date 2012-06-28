@@ -262,7 +262,7 @@ Private Sub cmdFindAll_Click()
         If InStr(1, x, Text1, vbTextCompare) > 0 Then
             push ret, x
         End If
-        If i Mod 5 = 0 Then setPB i, UBound(tmp)
+        If i Mod 5 = 0 Then setpb i, UBound(tmp)
     Next
     pb.value = 0
     
@@ -309,8 +309,12 @@ End Sub
 
 Private Sub Command3_Click()
     Dim f As String
+    Dim def As String
     On Error GoTo hell
-    f = dlg.SaveDialog(textFiles, , "Save Report as", , Me.hWnd)
+    def = fso.GetBaseName(curFile)
+    If Len(def) > 12 Then def = VBA.Left(def, 5)
+    def = "str_" & def & ".txt"
+    f = dlg.SaveDialog(textFiles, , "Save Report as", , Me.hWnd, def)
     If Len(f) = 0 Then Exit Sub
     fso.WriteFile f, rtf.Text
 hell:
@@ -342,7 +346,7 @@ Private Sub Form_Resize()
     pb.Width = rtf.Width
 End Sub
  
- Sub setPB(cur, max)
+ Sub setpb(cur, max)
     On Error Resume Next
     pb.value = (cur / max) * 100
     Me.Refresh
@@ -406,7 +410,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         If x < 9000 Then ReDim buf(x)
         Get f, , buf()
         Search buf, pointer
-        setPB pointer, LOF(f)
+        setpb pointer, LOF(f)
     Loop
     
     lines = UBound(ret)
@@ -435,7 +439,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         If x < 9000 Then ReDim buf(x)
         Get f, , buf()
         Search buf, pointer
-        setPB pointer, LOF(f)
+        setpb pointer, LOF(f)
     Loop
     pb.value = 0
     

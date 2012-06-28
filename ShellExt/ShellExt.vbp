@@ -9,6 +9,7 @@ Module=Module1; Module1.bas
 Form=frmPeek.frm
 Form=frmHash.frm
 Form=frmFileHash.frm
+Class=CCmnDlg; CCmnDlg.cls
 IconForm="frmMain"
 Startup="frmMain"
 HelpFile=""
