@@ -13,6 +13,14 @@ Begin VB.Form frmFileHash
    ScaleWidth      =   5970
    ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cmdSearch 
+      Caption         =   "Search Hash"
+      Height          =   345
+      Left            =   1590
+      TabIndex        =   4
+      Top             =   1200
+      Width           =   1215
+   End
    Begin VB.CommandButton cmdVT 
       Caption         =   "VirusTotal"
       Height          =   345
@@ -32,7 +40,7 @@ Begin VB.Form frmFileHash
    Begin VB.CommandButton cmdCopyHash 
       Caption         =   "Copy Hash"
       Height          =   345
-      Left            =   3300
+      Left            =   3180
       TabIndex        =   1
       Top             =   1200
       Width           =   1125
@@ -64,6 +72,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Dim myMd5 As String
+Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpszOp As String, ByVal lpszFile As String, ByVal lpszParams As String, ByVal LpszDir As String, ByVal FsShowCmd As Long) As Long
 
 Sub ShowFileStats(fpath As String)
     
@@ -98,6 +107,11 @@ Private Sub cmdCopyHash_Click()
     Clipboard.SetText myMd5
     Unload Me
     End
+End Sub
+
+Private Sub cmdSearch_Click()
+   Const u = "http://www.google.com/#hl=en&output=search&q="
+   ShellExecute Me.hwnd, "Open", u & myMd5, "", "C:\", 1
 End Sub
 
 Private Sub cmdVT_Click()
