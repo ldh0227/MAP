@@ -32,6 +32,8 @@ Source: ./ShellExt\frmPeek.frm; DestDir: {app}\ShellExt
 Source: ./ShellExt\Module1.bas; DestDir: {app}\ShellExt
 Source: ./ShellExt\frmPeek.frx; DestDir: {app}\ShellExt
 Source: ./ShellExt\frmMain.frx; DestDir: {app}\ShellExt
+Source: ./ShellExt\CPEEditor.cls; DestDir: {app}\ShellExt
+Source: ./ShellExt\CSection.cls; DestDir: {app}\ShellExt
 Source: ./socketTool\Project1.vbw; DestDir: {app}\socketTool
 Source: ./socketTool\Form1.frm; DestDir: {app}\socketTool
 Source: ./socketTool\Project1.vbp; DestDir: {app}\socketTool

@@ -98,8 +98,13 @@ Public Enum tmMsgs
         EM_SETMARGINS = &HD3
 End Enum
 
-Private Declare Function SendMessage Lib "User32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Private Declare Function SendMessage Lib "User32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpszOp As String, ByVal lpszFile As String, ByVal lpszParams As String, ByVal LpszDir As String, ByVal FsShowCmd As Long) As Long
 
+Function Google(hash As String, Optional hwnd As Long = 0)
+    Const u = "http://www.google.com/#hl=en&output=search&q="
+    ShellExecute hwnd, "Open", u & hash, "", "C:\", 1
+End Function
 
 Sub push(ary, value) 'this modifies parent ary object
     On Error GoTo init
@@ -277,10 +282,10 @@ Sub ScrollIncremental(t As Object, Optional horz As Integer = 0, Optional vert A
     
     Dim r As Long
     r = CLng(&H10000 * horz) + vert
-    r = SendMessage(t.hWnd, EM_LINESCROLL, 0, ByVal r)
+    r = SendMessage(t.hwnd, EM_LINESCROLL, 0, ByVal r)
 
 End Sub
 
 Function TopLineIndex(x As Object) As Long
-    TopLineIndex = SendMessage(x.hWnd, EM_GETFIRSTVISIBLELINE, 0, ByVal 0&) + 1
+    TopLineIndex = SendMessage(x.hwnd, EM_GETFIRSTVISIBLELINE, 0, ByVal 0&) + 1
 End Function

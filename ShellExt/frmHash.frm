@@ -103,6 +103,9 @@ Begin VB.Form frmHash
       Begin VB.Menu mnuVTLookupSelected 
          Caption         =   "Virus Total Lookup On Selected"
       End
+      Begin VB.Menu mnuGoogleSelected 
+         Caption         =   "Google Selected"
+      End
       Begin VB.Menu mnudivider 
          Caption         =   "-"
       End
@@ -432,6 +435,35 @@ Private Sub Form_Resize()
     lv.Width = Me.Width - lv.Left - 140
     lv.Height = Me.Height - lv.Top - 450
     pb.Width = lv.Width
+End Sub
+
+Private Sub mnuGoogleSelected_Click()
+    On Error Resume Next
+    Dim hashs() As String
+    Dim li As ListItem
+    Dim h As String
+    Dim i As Long
+    Dim x
+    
+    For Each li In lv.ListItems
+        If li.Selected Then
+            h = li.SubItems(2)
+            If Len(h) > 0 And InStr(h, "Error") < 1 Then
+                push hashs, li.SubItems(2)
+                i = i + 1
+            End If
+        End If
+    Next
+
+    If i = 0 Then
+        MsgBox "No items were selected!", vbInformation
+        Exit Sub
+    End If
+    
+    For Each x In hashs
+        Google CStr(x), Me.hwnd
+    Next
+    
 End Sub
 
 Private Sub mnuMakeExtSafe_Click()

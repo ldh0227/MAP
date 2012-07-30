@@ -11,27 +11,44 @@ Begin VB.Form frmStrings
    ScaleHeight     =   5340
    ScaleWidth      =   12810
    StartUpPosition =   2  'CenterScreen
+   Begin VB.OptionButton optVa 
+      Caption         =   "va"
+      Height          =   255
+      Left            =   10800
+      TabIndex        =   15
+      Top             =   90
+      Width           =   555
+   End
+   Begin VB.OptionButton optRaw 
+      Caption         =   "raw"
+      Height          =   225
+      Left            =   10170
+      TabIndex        =   14
+      Top             =   90
+      Value           =   -1  'True
+      Width           =   585
+   End
    Begin VB.Timer tmrReRun 
       Enabled         =   0   'False
       Interval        =   200
-      Left            =   9300
-      Top             =   -30
+      Left            =   1590
+      Top             =   150
    End
    Begin VB.CheckBox chkFilter 
       Caption         =   "Filter Results"
       Height          =   285
-      Left            =   11370
+      Left            =   11430
       TabIndex        =   11
       Top             =   30
       Width           =   255
    End
    Begin VB.CheckBox chkShowOffsets 
-      Caption         =   "Show Offsets"
+      Caption         =   "Offsets"
       Height          =   285
-      Left            =   9900
+      Left            =   9300
       TabIndex        =   10
       Top             =   30
-      Width           =   1365
+      Width           =   825
    End
    Begin VB.CommandButton cmdFindAll 
       Caption         =   "All"
@@ -44,14 +61,14 @@ Begin VB.Form frmStrings
    Begin VB.CommandButton cmdRescan 
       Caption         =   "Rescan"
       Height          =   315
-      Left            =   7770
+      Left            =   7680
       TabIndex        =   8
       Top             =   0
       Width           =   735
    End
    Begin VB.TextBox txtMinLen 
       Height          =   285
-      Left            =   7230
+      Left            =   7170
       TabIndex        =   7
       Text            =   "6"
       Top             =   0
@@ -136,7 +153,7 @@ Begin VB.Form frmStrings
       EndProperty
       ForeColor       =   &H00FF0000&
       Height          =   255
-      Left            =   8550
+      Left            =   8460
       TabIndex        =   13
       Top             =   30
       Width           =   675
@@ -154,7 +171,7 @@ Begin VB.Form frmStrings
       EndProperty
       ForeColor       =   &H00FF0000&
       Height          =   255
-      Left            =   11640
+      Left            =   11700
       TabIndex        =   12
       Top             =   60
       Width           =   1125
@@ -162,7 +179,7 @@ Begin VB.Form frmStrings
    Begin VB.Label Label2 
       Caption         =   "Min Size"
       Height          =   255
-      Left            =   6600
+      Left            =   6510
       TabIndex        =   6
       Top             =   30
       Width           =   645
@@ -201,6 +218,7 @@ Dim sSearch
 Dim lastFind As Long
 Dim lastSize As Long
 Dim curFile As String
+Dim pe As New CPEEditor
 
 Dim d As New RegExp
 Dim mc As MatchCollection
@@ -314,7 +332,7 @@ Private Sub Command3_Click()
     def = fso.GetBaseName(curFile)
     If Len(def) > 12 Then def = VBA.Left(def, 5)
     def = "str_" & def & ".txt"
-    f = dlg.SaveDialog(textFiles, , "Save Report as", , Me.hWnd, def)
+    f = dlg.SaveDialog(textFiles, , "Save Report as", , Me.hwnd, def)
     If Len(f) = 0 Then Exit Sub
     fso.WriteFile f, rtf.Text
 hell:
@@ -329,6 +347,8 @@ Private Sub Form_Load()
     Me.Visible = True
     chkShowOffsets.value = GetMySetting("offsests", 1)
     chkFilter.value = GetMySetting("Filter", 0)
+    optRaw.value = IIf(GetMySetting("Raw", 1) = 1, True, False)
+    If Not optRaw.value Then optVa.value = True
     formLoaded = True
 End Sub
 
@@ -337,6 +357,7 @@ Private Sub Form_Unload(Cancel As Integer)
    SaveFormSizeAnPosition Me
    SaveMySetting "offsests", chkShowOffsets.value
    SaveMySetting "Filter", chkFilter.value
+   SaveMySetting "Raw", IIf(optRaw.value, 1, 0)
    End
 End Sub
 
@@ -378,6 +399,8 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         MsgBox "File not found: " & fpath, vbExclamation
         GoTo done
     End If
+    
+    pe.LoadFile fpath
     
     If running Then
         abort = True
@@ -449,7 +472,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     Dim topLine As Integer
     
     lines = lines + UBound(ret)
-    LockWindowUpdate rtf.hWnd 'try to make it not jump when we add more...
+    LockWindowUpdate rtf.hwnd 'try to make it not jump when we add more...
     topLine = TopLineIndex(rtf)
     rtf.Text = rtf.Text & vbCrLf & vbCrLf & Join(ret, vbCrLf)
     ScrollToLine rtf, topLine
@@ -482,33 +505,54 @@ End Sub
 
 Private Sub Search(buf() As Byte, offset As Long)
     Dim b As String
-    Dim o As String
+    Dim m As match
     
     b = StrConv(buf, vbUnicode)
     Set mc = d.Execute(b)
     
     For Each m In mc
-        o = Empty
+        DoEvents
         If abort Then Exit Sub
         If chkFilter.value = 1 Then
-            If Not Filter(m.value) Then
-                If chkShowOffsets.value = 1 Then o = pad(m.FirstIndex + offset - 1) & "  "
-                push ret(), o & Replace(m.value, Chr(0), Empty)
-            End If
+            If Not Filter(m.value) Then AddResult m, offset
         Else
-            If chkShowOffsets.value = 1 Then o = pad(m.FirstIndex + offset - 1) & "  "
-            push ret(), o & Replace(m.value, Chr(0), Empty)
+            AddResult m, offset
         End If
     Next
     
 End Sub
 
-Function pad(x, Optional leng = 8)
-    On Error Resume Next
-    x = Hex(x)
+Function AddResult(m As match, offset As Long)
+    Dim x As Long, xx As Long, sect As String, o As String
+    
+    If chkShowOffsets.value = 1 Then
+        x = m.FirstIndex + offset - 1
+        If optVa.value And pe.isLoaded = True Then
+            xx = pe.OffsetToVA(x, sect)
+            If xx = 0 Then
+                o = pad(x) & "  "
+            Else
+                o = sect & ":" & pad(xx) & "  "
+            End If
+        Else
+            o = pad(x) & "  "
+        End If
+    End If
+    
+    push ret(), o & Replace(m.value, Chr(0), Empty)
+    
+End Function
+
+Function pad(v, Optional leng = 8)
+    On Error GoTo hell
+    Dim x As String
+    x = Hex(v)
     While Len(x) < leng
         x = "0" & x
     Wend
+    pad = x
+    Exit Function
+hell:
     pad = x
 End Function
 
@@ -550,15 +594,15 @@ Function Filter(x As String) As Boolean
     If InStr(x, "http://") > 0 Then
         Filter = False
     ElseIf toManySpecialChars(x) Then
-        If isIde() Then f = vbTab & "(SpecialCharsFilter)"
+        If isIde() Then f = vbTab & vbTab & "(SpecialCharsFilter)"
         push filtered, x & f
         Filter = True
     ElseIf toManyRepeats(x) Then
-        If isIde() Then f = vbTab & "(RepeatFilter)"
+        If isIde() Then f = vbTab & vbTab & "(RepeatFilter)"
         push filtered, x & f
         Filter = True
     ElseIf toManyNumbers(x) Then
-        If isIde() Then f = vbTab & "(NumberFilter)"
+        If isIde() Then f = vbTab & vbTab & "(NumberFilter)"
         push filtered, x & f
         Filter = True
     Else
@@ -675,6 +719,16 @@ Private Sub Label3_Click()
     End If
 End Sub
 
+
+Private Sub optRaw_Click()
+    If Not formLoaded Then Exit Sub
+    If chkShowOffsets.value = 1 Then ParseFile curFile, True
+End Sub
+
+Private Sub optVa_Click()
+    If Not formLoaded Then Exit Sub
+    If chkShowOffsets.value = 1 Then ParseFile curFile, True
+End Sub
 
 Private Sub tmrReRun_Timer()
     tmrReRun.Enabled = False

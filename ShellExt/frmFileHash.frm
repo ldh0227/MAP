@@ -72,7 +72,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Dim myMd5 As String
-Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpszOp As String, ByVal lpszFile As String, ByVal lpszParams As String, ByVal LpszDir As String, ByVal FsShowCmd As Long) As Long
 
 Sub ShowFileStats(fpath As String)
     
@@ -110,8 +109,7 @@ Private Sub cmdCopyHash_Click()
 End Sub
 
 Private Sub cmdSearch_Click()
-   Const u = "http://www.google.com/#hl=en&output=search&q="
-   ShellExecute Me.hwnd, "Open", u & myMd5, "", "C:\", 1
+   Google myMd5, Me.hwnd
 End Sub
 
 Private Sub cmdVT_Click()

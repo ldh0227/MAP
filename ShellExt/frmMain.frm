@@ -247,16 +247,18 @@ Private Sub Form_Load()
     Dim mode As Long
     Dim cmd As String
        
-    'frmFileHash.ShowFileStats "c:\boot.ini"
-    'Exit Sub
-    
-       
     cmd = Replace(Command, """", "")
     
     On Error Resume Next
     minStrLen = CLng(GetMySetting("minStrLen", 4))
     If Len(minStrLen) = 0 Then minStrLen = 4
     Text1 = minStrLen
+    
+    'frmFileHash.ShowFileStats "c:\boot.ini"
+    'Exit Sub
+    
+    'frmStrings.ParseFile "c:\peEditor.exe"
+    'Exit Sub
     
     If Len(cmd) > 0 Then
         If VBA.Right(cmd, 5) = "/peek" Then mode = 1
