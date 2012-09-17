@@ -175,8 +175,7 @@ Private Function CompiledDate(stamp As Double) As String
     
     Base = DateSerial(1970, 1, 1)
     compiled = DateAdd("s", stamp, Base)
-    'CompiledDate = Format(compiled, "ddd mmm d h:nn:ss yyyy")
-    CompiledDate = Format(compiled, "mmm d h:nn:ss yyyy (ddd)")
+    CompiledDate = Format(compiled, "ddd, mmm d yyyy, h:nn:ss ")
 
 End Function
 
@@ -224,6 +223,12 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
         Close f
         GetCompileDateOrType = CompiledDate(CDbl(NTHEADER.FileHeader.TimeDateStamp))
         
+        If is64Bit(NTHEADER.FileHeader.Machine) Then
+            GetCompileDateOrType = GetCompileDateOrType & " - 64 Bit"
+        ElseIf is32Bit(NTHEADER.FileHeader.Machine) Then
+            GetCompileDateOrType = GetCompileDateOrType & " - 32 Bit"
+        End If
+        
 Exit Function
 hell:
     
@@ -232,6 +237,20 @@ hell:
     GetCompileDateOrType = Err.Description
    
 End Function
+
+Private Function is64Bit(m As Integer) As Boolean
+    If m = &H8664 Or m = &H200 Then 'AMD64 or IA64
+        is64Bit = True
+    End If
+End Function
+
+Private Function is32Bit(m As Integer) As Boolean
+    If m = &H14C Then '386
+        is32Bit = True
+    End If
+End Function
+
+ 
 
 Private Function DetectFileType(buf As String, fname As String) As String
     Dim dot As Long

@@ -122,3 +122,4 @@ Private Sub cmdVT_Click()
     End If
     Shell vt & " /hash " & myMd5
 End Sub
+

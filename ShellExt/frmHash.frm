@@ -305,7 +305,7 @@ nextone:
             If fso.FileExists(f) Then
                 Kill f
             End If
-            lv.ListItems.Remove li.Index
+            lv.ListItems.Remove li.index
             GoTo nextone
         End If
     Next
@@ -380,7 +380,7 @@ nextone:
             If fso.FileExists(f) Then
                 Kill f
             End If
-            lv.ListItems.Remove li.Index
+            lv.ListItems.Remove li.index
             GoTo nextone
         End If
     Next
@@ -435,6 +435,7 @@ Private Sub Form_Resize()
     lv.Width = Me.Width - lv.Left - 140
     lv.Height = Me.Height - lv.Top - 450
     pb.Width = lv.Width
+    lv.ColumnHeaders(lv.ColumnHeaders.Count).Width = lv.Width - lv.ColumnHeaders(lv.ColumnHeaders.Count).Left - 100
 End Sub
 
 Private Sub mnuGoogleSelected_Click()

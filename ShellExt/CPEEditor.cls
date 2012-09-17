@@ -19,6 +19,9 @@ Public Sections As Collection
 Public errMessage As String
 Public ImageBase As Long
 Public isLoaded As Boolean
+Public MachineType As String
+Public is64Bit As Boolean
+Public is32Bit As Boolean
 
 Private DOSHEADER As IMAGEDOSHEADER
 Private NTHEADER As IMAGE_NT_HEADERS
@@ -27,6 +30,30 @@ Private myFile As String
 Private Const IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16
 Private Const IMAGE_SIZEOF_SHORT_NAME = 8
 Private Const IMAGE_NT_OPTIONAL_HDR32_MAGIC = &H10B
+
+Public Enum eMachineType
+    mt_UNKNOWN = &H0
+    mt_AM33 = &H1D3
+    mt_AMD64 = &H8664
+    mt_ARM = &H1C0
+    mt_EBC = &HEBC
+    mt_I386 = &H14C
+    mt_IA64 = &H200
+    mt_M32R = &H9041
+    mt_MIPS16 = &H266
+    mt_MIPSFPU = &H366
+    mt_MIPSFPU16 = &H466
+    mt_POWERPC = &H1F0
+    mt_POWERPCFP = &H1F1
+    mt_R4000 = &H166
+    mt_SH3 = &H1A2
+    mt_SH3DSP = &H1A3
+    mt_SH4 = &H1A6
+    mt_SH5 = &H1A8
+    mt_THUMB = &H1C2
+    mt_WCEMIPSV2 = &H169
+End Enum
+
 
 Private Type IMAGEDOSHEADER
     e_magic As Integer
@@ -91,6 +118,10 @@ Function LoadFile(fpath As String) As Boolean
         
         isLoaded = False
         errMessage = Empty
+        is64Bit = False
+        is32Bit = False
+        MachineType = ""
+        
         If Not FileExists(fpath) Then Err.Raise 1
             
         Set Sections = New Collection
@@ -110,6 +141,7 @@ Function LoadFile(fpath As String) As Boolean
         LoadFile = True
         myFile = fpath
         isLoaded = True
+        MachineType = getMachineType(NTHEADER.FileHeader.Machine)
         
 Exit Function
 hell:
@@ -153,6 +185,8 @@ Private Sub LoadSections(fhand As Long, nth As IMAGE_NT_HEADERS)
     Next
     
 End Sub
+
+
 
 Function OffsetToVA(ByVal foffset As Long, Optional sectName As String) As Long
     Dim rva As Long
@@ -246,6 +280,33 @@ Private Function FileExists(path) As Boolean
   If Dir(path, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then FileExists = True
 End Function
 
-
+Private Function getMachineType(m As Integer) As String
+    
+    Select Case m
+        Case mt_UNKNOWN: getMachineType = "Unknown"
+        Case mt_AM33: getMachineType = "AM33"
+        Case mt_AMD64: getMachineType = "64 Bit": is64Bit = True
+        Case mt_ARM: getMachineType = "ARM"
+        Case mt_EBC: getMachineType = "EBC"
+        Case mt_I386: getMachineType = "32 Bit": is32Bit = True
+        Case mt_IA64: getMachineType = "64 Bit": is64Bit = True
+        Case mt_M32R: getMachineType = "M32R"
+        Case mt_MIPS16: getMachineType = "MIPS16"
+        Case mt_MIPSFPU: getMachineType = "MIPSFPU"
+        Case mt_MIPSFPU16: getMachineType = "MIPSFPU16"
+        Case mt_POWERPC: getMachineType = "POWERPC"
+        Case mt_POWERPCFP: getMachineType = "POWERPCFP"
+        Case mt_R4000: getMachineType = "R4000"
+        Case mt_SH3: getMachineType = "SH3"
+        Case mt_SH3DSP: getMachineType = "SH3DSP"
+        Case mt_SH4: getMachineType = "SH4"
+        Case mt_SH5: getMachineType = "SH5"
+        Case mt_THUMB: getMachineType = "THUMB"
+        Case mt_WCEMIPSV2: getMachineType = "WCEMIPSV2"
+        Case Else: getMachineType = "Unknown"
+    End Select
+    
+    
+End Function
 
 
