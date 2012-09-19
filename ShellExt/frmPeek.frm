@@ -381,6 +381,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     Dim f As Long, pointer As Long
     Dim buf()  As Byte
     Dim x As Long
+    Dim fs As Long
     
     If Not formLoaded Then Form_Load
         
@@ -395,6 +396,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     'If Not force Then If lastSize = txtMinLen Then Exit Sub
     lastSize = CLng(txtMinLen)
     
+    fs = DisableRedir()
     If Not fso.FileExists(fpath) Then
         MsgBox "File not found: " & fpath, vbExclamation
         GoTo done
@@ -405,6 +407,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     If running Then
         abort = True
         tmrReRun.Enabled = True 'relaunch in 200ms
+        RevertRedir fs
         Exit Sub
     End If
     
@@ -487,16 +490,19 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
     End If
     
     running = False
+    RevertRedir fs
     
 Exit Sub
 hell:
       MsgBox "Error getting strings: " & Err.Description, vbExclamation
       Close f
 done:
+      RevertRedir fs
       'Unload Me
       End
       
 aborting:
+      RevertRedir fs
       running = False
       abort = False
       pb.value = 0

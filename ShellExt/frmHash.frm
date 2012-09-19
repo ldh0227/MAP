@@ -138,9 +138,10 @@ Attribute VB_Exposed = False
 '         this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 '         Place, Suite 330, Boston, MA 02111-1307 USA
 
-'7-6-05 Added Delete All Duplicates option
+'7-6-05  Added Delete All Duplicates option
 '4-19-12 moved buttons to right click menu options, integrated VirusTotal.exe options
 '5.17.12 added progress bar, fixed integer overflow in vbDevKit.CWinHash
+'9.18.12 added x64 file system redirection awareness to main hashing routines (not to all right click options..)
 
 Dim path As String
 Sub setpb(cur, max)
@@ -155,7 +156,7 @@ Sub HashDir(dPath As String)
     On Error GoTo out
     Dim f() As String, i As Long
     Dim pf As String
-    
+    Dim fs As Long
     'MsgBox "entering hash dir"
     
     path = dPath
@@ -164,12 +165,14 @@ Sub HashDir(dPath As String)
     
     Me.Caption = Me.Caption & "    Folder: " & pf
         
+    fs = DisableRedir()
     If Not fso.FolderExists(dPath) Then
         MsgBox "Folder not found: " & dPath
         GoTo done
     End If
              
     f() = fso.GetFolderFiles(dPath)
+    RevertRedir fs
     
     If AryIsEmpty(f) Then
         MsgBox "No files in this directory", vbInformation
@@ -189,12 +192,13 @@ Sub HashDir(dPath As String)
      
     On Error Resume Next
     Me.Show 1
-   
+    
     Exit Sub
 out:
     MsgBox "HashFiles Error: " & Err.Description, vbExclamation
 done:
     'Unload Me
+    RevertRedir fs
     End
 End Sub
 
@@ -406,11 +410,15 @@ End Sub
 Sub handleFile(f As String)
     Dim h  As String
     Dim li As ListItem
-    Dim e
+    Dim e, fs As Long
+    Dim sz As Long
     
     On Error Resume Next
     
+    fs = DisableRedir()
     h = LCase(hash.HashFile(f))
+    sz = FileLen(f)
+    RevertRedir fs
     
     If Len(h) = 0 Then
         e = Split(hash.error_message, "-")
@@ -419,7 +427,7 @@ Sub handleFile(f As String)
     End If
     
     Set li = lv.ListItems.Add(, , fso.FileNameFromPath(f))
-    li.SubItems(1) = FileLen(f)
+    li.SubItems(1) = sz
     li.SubItems(2) = h
     li.SubItems(3) = GetCompileDateOrType(f)
     li.Tag = f

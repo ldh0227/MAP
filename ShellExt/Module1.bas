@@ -101,6 +101,46 @@ End Enum
 Private Declare Function SendMessage Lib "User32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
 Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpszOp As String, ByVal lpszFile As String, ByVal lpszParams As String, ByVal LpszDir As String, ByVal FsShowCmd As Long) As Long
 
+Private Declare Function Wow64DisableWow64FsRedirection Lib "kernel32.dll" (ByRef old As Long) As Long
+Private Declare Function Wow64RevertWow64FsRedirection Lib "kernel32.dll" (ByRef old As Long) As Long
+Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
+Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
+Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As String) As Long
+
+Dim firstHandle As Long
+
+Function DisableRedir() As Long
+    
+    If firstHandle <> 0 Then Exit Function 'defaults to 0 on subsequent calls...
+    
+    If GetProcAddress(GetModuleHandle("kernel32.dll"), "Wow64DisableWow64FsRedirection") = 0 Then
+        Exit Function
+    End If
+    
+    Dim r As Long, lastRedir As Long
+    r = Wow64DisableWow64FsRedirection(lastRedir)
+    firstHandle = IIf(r <> 0, lastRedir, 0)
+    DisableRedir = firstHandle
+    
+End Function
+
+Function RevertRedir(old As Long) As Boolean 'really only reverts firstHandle when called...
+    
+    If old = 0 Then Exit Function
+    If old <> firstHandle Then Exit Function
+    
+    If GetProcAddress(GetModuleHandle("kernel32.dll"), "Wow64RevertWow64FsRedirection") = 0 Then
+        Exit Function
+    End If
+    
+    Dim r As Long
+    r = Wow64RevertWow64FsRedirection(old)
+    If r <> 0 Then RevertRedir = True
+    firstHandle = 0
+    
+End Function
+
+
 Function Google(hash As String, Optional hwnd As Long = 0)
     Const u = "http://www.google.com/#hl=en&output=search&q="
     ShellExecute hwnd, "Open", u & hash, "", "C:\", 1
@@ -186,12 +226,14 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
         Dim f As Long
         Dim buf(20) As Byte
         Dim sbuf As String
+        Dim fs As Long
         
         Dim DOSHEADER As IMAGEDOSHEADER
         Dim NTHEADER As IMAGE_NT_HEADERS
         
         out_isType = False
         
+        fs = DisableRedir()
         If Not fso.FileExists(fpath) Then Exit Function
             
         f = FreeFile
@@ -205,6 +247,7 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
             sbuf = StrConv(buf(), vbUnicode, LANG_US)
             GetCompileDateOrType = DetectFileType(sbuf, fpath)
             out_isType = True
+            RevertRedir fs
             Exit Function
         End If
         
@@ -216,12 +259,14 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
             sbuf = StrConv(buf(), vbUnicode, LANG_US)
             GetCompileDateOrType = DetectFileType(sbuf, fpath)
             out_isType = True
+            RevertRedir fs
             Exit Function
         End If
         
         
         Close f
         GetCompileDateOrType = CompiledDate(CDbl(NTHEADER.FileHeader.TimeDateStamp))
+        RevertRedir fs
         
         If is64Bit(NTHEADER.FileHeader.Machine) Then
             GetCompileDateOrType = GetCompileDateOrType & " - 64 Bit"
@@ -235,7 +280,7 @@ hell:
     Close f
     out_isType = True
     GetCompileDateOrType = Err.Description
-   
+    RevertRedir fs
 End Function
 
 Private Function is64Bit(m As Integer) As Boolean

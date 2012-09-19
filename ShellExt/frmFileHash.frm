@@ -79,11 +79,15 @@ Sub ShowFileStats(fpath As String)
     Dim ret() As String
     Dim istype As Boolean
     Dim compiled As String
+    Dim fs As Long, sz As Long
     
+    fs = DisableRedir()
     myMd5 = hash.HashFile(fpath)
+    sz = FileLen(fpath)
+    RevertRedir fs
     
     push ret(), "File: " & fso.FileNameFromPath(fpath)
-    push ret(), "Size: " & FileLen(fpath)
+    push ret(), "Size: " & sz
     push ret(), "MD5:  " & myMd5
     
     compiled = GetCompileDateOrType(fpath, istype)
