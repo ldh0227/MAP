@@ -80,13 +80,20 @@ Sub ShowFileStats(fpath As String)
     Dim istype As Boolean
     Dim compiled As String
     Dim fs As Long, sz As Long
+    Dim fname As String
     
     fs = DisableRedir()
     myMd5 = hash.HashFile(fpath)
     sz = FileLen(fpath)
     RevertRedir fs
     
-    push ret(), "File: " & fso.FileNameFromPath(fpath)
+    fname = fso.FileNameFromPath(fpath)
+    If Len(fname) > 50 Then
+        fname = GetShortName(fpath)
+        fname = fso.FileNameFromPath(fname)
+    End If
+    
+    push ret(), "File: " & fname
     push ret(), "Size: " & sz
     push ret(), "MD5:  " & myMd5
     

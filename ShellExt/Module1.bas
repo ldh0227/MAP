@@ -106,8 +106,59 @@ Private Declare Function Wow64RevertWow64FsRedirection Lib "kernel32.dll" (ByRef
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
 Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
 Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As String) As Long
+Private Declare Function GetShortPathName Lib "kernel32" Alias "GetShortPathNameA" (ByVal lpszLongPath As String, ByVal lpszShortPath As String, ByVal cchBuffer As Long) As Long
 
 Dim firstHandle As Long
+
+Function pad(v, Optional l As Long = 8)
+    On Error GoTo hell
+    Dim x As Long
+    x = Len(v)
+    If x < l Then
+        pad = String(l - x, " ") & v
+    Else
+hell:
+        pad = v
+    End If
+End Function
+
+Public Sub LV_ColumnSort(ListViewControl As ListView, Column As ColumnHeader)
+     On Error Resume Next
+    With ListViewControl
+       If .SortKey <> Column.index - 1 Then
+             .SortKey = Column.index - 1
+             .SortOrder = lvwAscending
+       Else
+             If .SortOrder = lvwAscending Then
+              .SortOrder = lvwDescending
+             Else
+              .SortOrder = lvwAscending
+             End If
+       End If
+       .Sorted = -1
+    End With
+End Sub
+
+Public Function GetShortName(sFile As String) As String
+    Dim sShortFile As String * 67
+    Dim lResult As Long
+    
+    'the path must actually exist to get the short path name !!
+    If Not fso.FileExists(sFile) Then 'fso.WriteFile sFile, ""
+        GetShortName = sFile
+        Exit Function
+    End If
+        
+    'Make a call to the GetShortPathName API
+    lResult = GetShortPathName(sFile, sShortFile, _
+    Len(sShortFile))
+
+    'Trim out unused characters from the string.
+    GetShortName = Left$(sShortFile, lResult)
+    
+    If Len(GetShortName) = 0 Then GetShortName = sFile
+
+End Function
 
 Function DisableRedir() As Long
     
@@ -310,9 +361,11 @@ Private Function DetectFileType(buf As String, fname As String) As String
     ElseIf VBA.Left(buf, 4) = "L" & Chr(0) & Chr(0) & Chr(0) Then
         DetectFileType = "Link File"
     ElseIf VBA.Left(buf, 3) = "CWS" Then
+        DetectFileType = "Compressed SWF File"
+    ElseIf VBA.Left(buf, 3) = "FWS" Then
         DetectFileType = "SWF File"
-    ElseIf VBA.Left(buf, 3) = "CWF" Then
-        DetectFileType = "SWF File"
+    ElseIf VBA.Left(buf, 5) = "{\rtf" Then
+        DetectFileType = "RTF Document"
     Else
         dot = InStrRev(fname, ".")
         If dot > 0 And dot <> Len(fname) Then

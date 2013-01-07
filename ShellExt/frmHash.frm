@@ -1,15 +1,12 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
 Begin VB.Form frmHash 
-   BorderStyle     =   1  'Fixed Single
    Caption         =   "Directory File Hasher - Right Click on ListView for Menu Options"
    ClientHeight    =   4080
-   ClientLeft      =   45
-   ClientTop       =   330
+   ClientLeft      =   60
+   ClientTop       =   345
    ClientWidth     =   12060
    LinkTopic       =   "Form1"
-   MaxButton       =   0   'False
-   MinButton       =   0   'False
    ScaleHeight     =   4080
    ScaleWidth      =   12060
    StartUpPosition =   2  'CenterScreen
@@ -78,6 +75,9 @@ Begin VB.Form frmHash
       End
       Begin VB.Menu mnuCopyHashs 
          Caption         =   "Copy Hashs"
+      End
+      Begin VB.Menu mnuCopySelected 
+         Caption         =   "Copy Selected"
       End
       Begin VB.Menu mnuDiv 
          Caption         =   "-"
@@ -213,6 +213,10 @@ Function KeyExistsInCollection(c As Collection, val As String) As Boolean
 nope: KeyExistsInCollection = False
 End Function
 
+Private Sub lv_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
+    LV_ColumnSort lv, ColumnHeader
+End Sub
+
 Private Sub lv_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = vbRightButton Then PopupMenu mnuPopup
 End Sub
@@ -228,6 +232,23 @@ Private Sub mnuCopyHashs_Click()
     Clipboard.Clear
     Clipboard.SetText t
     MsgBox "Copy Complete", vbInformation
+End Sub
+
+Private Sub mnuCopySelected_Click()
+
+    Dim li As ListItem
+    Dim t As String
+    
+    For Each li In lv.ListItems
+        If li.Selected Then
+            t = t & li.Text & vbTab & li.SubItems(1) & vbTab & li.SubItems(2) & vbTab & li.SubItems(3) & vbCrLf
+        End If
+    Next
+    
+    Clipboard.Clear
+    Clipboard.SetText t
+    'MsgBox "Copy Complete", vbInformation
+    
 End Sub
 
 Private Sub mnuCopyTableCSV_Click()
@@ -427,7 +448,7 @@ Sub handleFile(f As String)
     End If
     
     Set li = lv.ListItems.Add(, , fso.FileNameFromPath(f))
-    li.SubItems(1) = sz
+    li.SubItems(1) = pad(sz)
     li.SubItems(2) = h
     li.SubItems(3) = GetCompileDateOrType(f)
     li.Tag = f
