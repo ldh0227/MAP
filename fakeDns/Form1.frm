@@ -277,7 +277,7 @@ End Sub
 Private Sub Form_Load()
     
     On Error Resume Next
-    txtIp = GetSetting("iDefense", "fakeDNS", "ip", ws(1).LocalIP)
+    txtIp = GetSetting("iDefense", "fakeDNS", "ip", ws(0).LocalIP)
     
 End Sub
 

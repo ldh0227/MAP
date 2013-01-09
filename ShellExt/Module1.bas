@@ -325,6 +325,7 @@ Function GetCompileDateOrType(fpath As String, Optional ByRef out_isType As Bool
             GetCompileDateOrType = GetCompileDateOrType & " - 32 Bit"
         End If
         
+        GetCompileDateOrType = GetCompileDateOrType & isExe_orDll(NTHEADER.FileHeader.Characteristics)
 Exit Function
 hell:
     
@@ -333,6 +334,24 @@ hell:
     GetCompileDateOrType = Err.Description
     RevertRedir fs
 End Function
+
+Private Function isExe_orDll(chart As Integer) As String
+    'IMAGE_FILE_DLL 0x2000, IMAGE_FILE_EXECUTABLE_IMAGE x0002
+    Dim isExecutable As Boolean
+    Dim isDll As Boolean
+    
+    If (chart And 2) = 2 Then
+        isExecutable = True
+        If (chart And &H2000) = &H2000 Then
+            isDll = True
+            isExe_orDll = " DLL"
+        Else
+            isExe_orDll = " EXE"
+        End If
+    End If
+    
+End Function
+
 
 Private Function is64Bit(m As Integer) As Boolean
     If m = &H8664 Or m = &H200 Then 'AMD64 or IA64

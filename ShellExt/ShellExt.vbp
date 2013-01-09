@@ -18,7 +18,7 @@ HelpFile=""
 Title="ShellExt"
 ExeName32="ShellExt.exe"
 Path32=".."
-Command32="C:\bsa.rar /peek"
+Command32="c:\windows\system32\kernel32.dll /md5f"
 Name="ShellExt"
 HelpContextID="0"
 CompatibleMode="0"
@@ -43,6 +43,7 @@ Unattended=0
 Retained=0
 ThreadPerObject=0
 MaxNumberOfThreads=1
+DebugStartupOption=0
 
 [MS Transaction Server]
 AutoRefresh=1
