@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Dim http As XMLHTTP
 
-Const URL_API_BASIS = "https://www.virustotal.com/vtapi/v2/"
+Const URL_API_BASIS = "http://www.virustotal.com/vtapi/v2/"
 Const URL_SCAN_FILE = "file/scan"
 Const URL_FILE_REPORT = "file/report"
 Const URL_SCAN_URL = "url/scan"
@@ -31,6 +31,9 @@ Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 Private Declare Function GetTickCount Lib "kernel32" () As Long
 
 Public report_cache_dir As String 'if this is set it will cache the results here in case looked up again.
+Dim repeatOnce As Boolean
+Public delayInterval As Long
+Public owner As Form
 
 'this class supports a couple nice things..
 '1) if you set the cache dir, it will save raw json there as optimization in case you lookup the same file
@@ -39,6 +42,12 @@ Public report_cache_dir As String 'if this is set it will cache the results here
 '   4 second threshold is not exceeded.
 '3) since vb doesnt support json, a CScan object is always passed back with details of the scan. parsing
 '    was just done in VB and is VT json specific and maybe a bit shady as it was done quickly..
+
+Private Function testAbort() As Boolean
+    On Error Resume Next
+    If Not (owner Is Nothing) Then testAbort = owner.abort
+    If Err.Number <> 0 Then testAbort = False
+End Function
 
 Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
 
@@ -56,7 +65,7 @@ Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
     Set List1 = list
     Set Timer1 = tmr
     Timer1.Enabled = False
-    Timer1.Interval = 4500
+    Timer1.Interval = delayInterval
 
     Set http = New XMLHTTP
     
@@ -72,14 +81,15 @@ Function GetReport(hash As String, list As ListBox, tmr As Timer) As CScan
     Else
         If NeedsDelay = True Then
             Interval = curtime - LastQueryTime
-            If Interval < 4200 Then
-                Interval = 4200 - Interval
+            If Interval < delayInterval Then
+                Interval = delayInterval - Interval
                 List1.AddItem "Must delay for " & Interval & " milliseconds"
                 Timer1.Interval = Interval
                 Timer1.Enabled = True
                 While Timer1.Enabled
                     DoEvents
                     Sleep 20
+                    If testAbort Then Timer1.Enabled = False
                 Wend
                 NeedsDelay = False
                 LastQueryTime = curtime
@@ -144,30 +154,65 @@ End Function
 Private Function Get_Web_Report(hash, out_response As String, out_status As String, out_statusCode As Long) As Boolean
     
     Err.Clear
-    On Error GoTo hell
-    
+        
     Dim x As Variant
     out_status = Empty
     out_response = Empty
+    repeatOnce = True
     
+tryAgain:
+
+On Error GoTo hell
+
+     Set http = Nothing
+     Set http = New XMLHTTP
+     
 1    http.Open "POST", URL_API_BASIS & URL_FILE_REPORT, False
 2    http.setRequestHeader "Content-type", "application/x-www-form-urlencoded"
-3    http.send "key=" & API_KEY & "&resource=" & hash
-    
+     If Not doSend("key=" & API_KEY & "&resource=" & hash) Then
+        List1.AddItem "Error in Get_Web_Report http.send failed desc: " & Err.Description & " ReadyState: " & http.readyState & " Status: " & http.status
+        If repeatOnce Then
+            repeatOnce = False
+            List1.AddItem "Failure Must delay for " & delayInterval & " milliseconds"
+            Timer1.Interval = delayInterval
+            Timer1.Enabled = True
+            While Timer1.Enabled
+                DoEvents
+                Sleep 20
+                If testAbort Then Exit Function
+            Wend
+            GoTo tryAgain
+        End If
+     End If
+        
      DoEvents
      
 5    out_status = http.statusText
 6    out_statusCode = http.status
 7    out_response = http.responseText
      If out_status = "OK" Then Get_Web_Report = True
-    
+     repeatOnce = True
+     
 hell:
     DoEvents
     If Err.Number <> 0 Then
-        List1.AddItem "Error in Get_Web_Report Line: " & Erl & " desc: " & Err.Description
+        List1.AddItem "Error in Get_Web_Report Line: " & Erl & " desc: " & Err.Description & " ReadyState: " & http.readyState & " Status: " & http.status
     End If
     
 End Function
+
+'status code of 1223 and drop all response headers if the server returns a HTTP/204 No Content
+Function doSend(s As String) As Boolean
+    On Error Resume Next
+    http.send s
+    doSend = IIf(Err.Number = 0, True, False)
+End Function
+
+
+Sub Closeit()
+    On Error Resume Next
+    http.abort
+End Sub
 
 Function AddComment(hash, comment, out_response As String, out_status As String, out_statusCode As Long) As Boolean
     
@@ -238,6 +283,7 @@ End Function
 
 Private Sub Class_Initialize()
     NeedsDelay = False
+    delayInterval = 17000 '4 requests per minute max
 End Sub
 
 Private Sub Timer1_Timer()

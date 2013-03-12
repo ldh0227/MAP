@@ -1,7 +1,7 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{3F4DACA7-160D-11D2-A8E9-00104B365C9F}#1.0#0#C:\WINDOWS\system32\vbscript.dll\2#Microsoft VBScript Regular Expressions 1.0
-Reference=*\G{DDC88AC2-2723-4C1B-9D61-C4F4D7CF5375}#2.4#0#..\..\SysAnalyzer\dependancy\vbDevKit.dll#Vb Developers Library From Sandsprite.com
+Reference=*\G{DDC88AC2-2723-4C1B-9D61-C4F4D7CF5375}#2.4#0#C:\WINDOWS\vbDevKit.dll#Vb Developers Library From Sandsprite.com
 Object={3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0; RICHTX32.OCX
 Object={831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0; mscomctl.ocx
 Form=frmMain.frm
@@ -18,7 +18,7 @@ HelpFile=""
 Title="ShellExt"
 ExeName32="ShellExt.exe"
 Path32=".."
-Command32="c:\windows\system32\kernel32.dll /md5f"
+Command32=""C:\Documents and Settings\david\Desktop\rt-4363\sample.drop_0" /md5f"
 Name="ShellExt"
 HelpContextID="0"
 CompatibleMode="0"

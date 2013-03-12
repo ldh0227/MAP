@@ -93,7 +93,10 @@ Sub ShowFileStats(fpath As String)
         fname = fso.FileNameFromPath(fname)
     End If
     
-    push ret(), "File: " & fname
+    If LCase(fname) <> LCase(myMd5) Then
+        push ret(), "File: " & fname
+    End If
+    
     push ret(), "Size: " & sz
     push ret(), "MD5:  " & myMd5
     

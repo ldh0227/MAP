@@ -274,8 +274,8 @@ Private Sub mnuCustomExtension_Click()
         fname = li.Text
         pdir = fso.GetParentFolder(fpath) & "\"
         
-        If InStr(fname, ".") > 0 Then
-            fname = Mid(fname, 1, InStr(fname, "."))
+        If InStrRev(fname, ".") > 1 Then
+            fname = Mid(fname, 1, InStrRev(fname, ".") - 1)
         End If
         
         h = fname & ext

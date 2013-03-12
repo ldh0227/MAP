@@ -160,11 +160,23 @@ Begin VB.Form Form1
       Begin VB.Menu mnuDivider 
          Caption         =   "-"
       End
+      Begin VB.Menu mnuClearList 
+         Caption         =   "Remove All"
+      End
       Begin VB.Menu mnuRemoveSelected 
          Caption         =   "Remove Selected"
       End
-      Begin VB.Menu mnuClearList 
-         Caption         =   "Remove All"
+      Begin VB.Menu mnuPrune 
+         Caption         =   "Remove No Detections"
+      End
+      Begin VB.Menu mnuspacer55 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuSearch 
+         Caption         =   "Search All"
+      End
+      Begin VB.Menu mnuRescanSelected 
+         Caption         =   "Rescan Selected"
       End
       Begin VB.Menu mnuDivider2 
          Caption         =   "-"
@@ -184,7 +196,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Dim vt As New CVirusTotal
 Dim selli As ListItem
-Dim abort As Boolean
+Public abort As Boolean
 Dim dlg As New clsCmnDlg
 Dim fso As New CFileSystem2
 
@@ -240,6 +252,8 @@ Private Sub cmdQuery_Click()
     abort = False
     
     pb.Max = lv.ListItems.Count
+    vt.delayInterval = IIf(pb.Max < 5, 2500, 17300) 'cant exceed 4 requests per minute...
+    List1.AddItem "Max: " & pb.Max & " Interval: " & vt.delayInterval
     
     For Each li In lv.ListItems
     
@@ -256,6 +270,10 @@ Private Sub cmdQuery_Click()
             Set li.Tag = scan
         Else
             li.SubItems(1) = "Failure"
+            li.SubItems(2) = Empty
+            li.SubItems(3) = Empty
+            Set li.Tag = Nothing
+            Set vt = New CVirusTotal
         End If
         
         li.EnsureVisible
@@ -331,12 +349,18 @@ Private Sub Form_Load()
     Dim path As String
     Dim hash_mode As Boolean
     
+    Set vt.owner = Me
     txtCacheDir = GetSetting("vt", "settings", "cachedir", "c:\VT_Cache")
     chkCache.value = GetSetting("vt", "settings", "usecache", 0)
     
     lv.ColumnHeaders(4).Width = lv.Width - lv.ColumnHeaders(4).Left - 150
     
     If InStr(Command, "/bulk") > 0 Then
+       If InStr(Command, "/bulktest") > 0 Then
+            Clipboard.Clear
+            limit = 4
+            Clipboard.SetText Join(Split("67f9f07418bb190e6a9072944dd47467,56cb11bd7537b62d2c760086b7c76c07,55c8660374ba2e76aa56012f0e48fbbf,6e7a8fe5ca03d765c1aebf9df7461da9,2f52937aab6f97dbf2b20b3d4a4b1226,c31b2f42c15d3c0080c8c694c569e8,e069c340a2237327e270d9bd5b9ed1dc,ab1de766e7fca8269efe04c9d6f91af0,142b70232a81a067673784e4e99e8165,60bf1bace9662117d5e0f1b2a825e5f3,6e6c35ad1d5271be255b2776f848521,bb41f3db526e35d722409086e3a7d111,00bdaecd9c8493b24488d5be0ff7393a,7b83a45568a8f8d8cdffcef70b95cb05,aa1e8e25bd36c313f4febe200c575fc7,f6e5d212dd791931d7138a106c42376c,e6c129c0694c043d8dda1afa60791cbf,3e4d1b61653fedeba122b33d15e1377d,48821e738e56d8802a89e28e1cab224d", ",", limit), vbCrLf)
+       End If
        Me.Show
        mnuAddHashs_Click
        cmdQuery_Click
@@ -444,12 +468,55 @@ On Error Resume Next
     
 End Sub
 
+Private Sub mnuPrune_Click()
+    Dim li As ListItem
+    On Error Resume Next
+    For i = lv.ListItems.Count To 1 Step -1
+        Set li = lv.ListItems(i)
+        If li.SubItems(1) = "0" Then lv.ListItems.Remove i
+    Next
+End Sub
+
 Private Sub mnuRemoveSelected_Click()
     On Error Resume Next
     
     For i = lv.ListItems.Count To 1 Step -1
         If lv.ListItems(i).Selected Then lv.ListItems.Remove i
     Next
+    
+End Sub
+
+Private Sub mnuRescanSelected_Click()
+    Dim li As ListItem
+    Dim scan As CScan
+    
+    For Each li In lv.ListItems
+
+        If li.Selected Then
+            If Len(Trim(li.Text)) > 0 Then
+            
+                Set scan = vt.GetReport(li.Text, List1, tmrDelay)
+                
+                If Not scan.HadError Then
+                    li.SubItems(1) = scan.positives
+                    li.SubItems(2) = scan.scan_date
+                    li.SubItems(3) = scan.verbose_msg
+                    Set li.Tag = scan
+                Else
+                    li.SubItems(1) = "Failure"
+                    li.SubItems(2) = Empty
+                    li.SubItems(3) = Empty
+                    Set li.Tag = Nothing
+                    Set vt = New CVirusTotal
+                End If
+                
+                li.EnsureVisible
+                DoEvents
+                
+            End If
+        End If
+    Next
+         
     
 End Sub
 
@@ -469,6 +536,30 @@ Private Sub mnuSaveReports_Click()
         fso.writeFile pf & "\VT_" & hash & ".txt", li.Text & "  Detections: " & li.SubItems(1) & "  ScanDate: " & li.SubItems(2) & vbCrLf & String(50, "-") & vbCrLf & scan.GetReport()
     Next
 
+End Sub
+
+Private Sub mnuSearch_Click()
+    Dim li As ListItem
+    Dim likeSearch As Boolean
+    
+    find = InputBox("Enter marker to search for, to use vb like operator prefix with like:")
+    If Len(find) = 0 Then Exit Sub
+    
+    If Len(find) > 5 And VBA.Left(find, 5) = "like:" Then
+        find = Trim(Mid(find, 6))
+        likeSearch = True
+    End If
+    
+    For Each li In lv.ListItems
+        li.Selected = False
+        If likeSearch Then
+            If li.SubItems(3) Like find Then li.Selected = True
+        Else
+            If InStr(1, li.SubItems(3), find, vbTextCompare) > 0 Then li.Selected = True
+        End If
+    Next
+    
+    
 End Sub
 
 Private Sub mnuViewRaw_Click()

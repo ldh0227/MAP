@@ -96,7 +96,7 @@ Begin VB.Form frmStrings
    Begin VB.CommandButton Command1 
       Caption         =   "Find"
       Height          =   315
-      Left            =   3510
+      Left            =   3480
       TabIndex        =   3
       Top             =   0
       Width           =   855
@@ -126,7 +126,6 @@ Begin VB.Form frmStrings
       _ExtentX        =   14737
       _ExtentY        =   8281
       _Version        =   393217
-      Enabled         =   -1  'True
       HideSelection   =   0   'False
       ScrollBars      =   3
       TextRTF         =   $"frmPeek.frx":0000
@@ -234,6 +233,8 @@ Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 Private Declare Function LockWindowUpdate Lib "User32" (ByVal hwndLock As Long) As Long
 
 
+Option Compare Binary
+
 Sub DisplayList(data As String)
     
     rtf.Text = data
@@ -269,16 +270,24 @@ End Sub
 Private Sub cmdFindAll_Click()
     On Error Resume Next
     
-    Dim tmp, x, ret(), i, f As String
+    'pretty sure all these like operators hold for vb6 as well.. http://msdn.microsoft.com/en-us/library/8t3khw5f.aspx
     
+    Dim tmp, x, ret(), i, f As String
+     
     If Len(Text1) = 0 Then Exit Sub
     tmp = Split(rtf.Text, vbCrLf)
     
     pb.value = 0
     For Each x In tmp
          i = i + 1
-        If InStr(1, x, Text1, vbTextCompare) > 0 Then
-            push ret, x
+        If InStr(Text1, "*") > 0 Then
+            If x Like Text1 Then
+                push ret, x
+            End If
+        Else
+            If InStr(1, x, Text1, vbTextCompare) > 0 Then
+                push ret, x
+            End If
         End If
         If i Mod 5 = 0 Then setpb i, UBound(tmp)
     Next
@@ -435,7 +444,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         If x < 1 Then Exit Do
         If x < 9000 Then ReDim buf(x)
         Get f, , buf()
-        Search buf, pointer
+        search buf, pointer
         setpb pointer, LOF(f)
     Loop
     
@@ -464,7 +473,7 @@ Sub ParseFile(fpath As String, Optional force As Boolean = False)
         If x < 1 Then Exit Do
         If x < 9000 Then ReDim buf(x)
         Get f, , buf()
-        Search buf, pointer
+        search buf, pointer
         setpb pointer, LOF(f)
     Loop
     pb.value = 0
@@ -509,7 +518,7 @@ aborting:
       
 End Sub
 
-Private Sub Search(buf() As Byte, offset As Long)
+Private Sub search(buf() As Byte, offset As Long)
     Dim b As String
     Dim m As match
     

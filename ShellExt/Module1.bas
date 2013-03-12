@@ -383,13 +383,15 @@ Private Function DetectFileType(buf As String, fname As String) As String
         DetectFileType = "Compressed SWF File"
     ElseIf VBA.Left(buf, 3) = "FWS" Then
         DetectFileType = "SWF File"
+    ElseIf VBA.Left(buf, 4) = "Rar!" Then
+        DetectFileType = "RAR File"
     ElseIf VBA.Left(buf, 5) = "{\rtf" Then
         DetectFileType = "RTF Document"
     Else
         dot = InStrRev(fname, ".")
         If dot > 0 And dot <> Len(fname) Then
             DetectFileType = Mid(fname, dot + 1) & " File"
-            If Len(DetectFileType) > 5 Then DetectFileType = "Unknown File Type"
+            If Len(DetectFileType) > 5 Then DetectFileType = "Unknown File Type." '<-- subtle identifier ending period
         Else
             DetectFileType = "Unknown File Type"
         End If

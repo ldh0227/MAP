@@ -10,8 +10,8 @@ OutputDir=./
 
 
 [Files]
-Source: ./Shellcode_2_exe\shellcode_2_exe.php; DestDir: {app}\Shellcode_2_exe
-Source: ./Shellcode_2_exe\husk.exe; DestDir: {app}\Shellcode_2_exe
+;Source: ./Shellcode_2_exe\shellcode_2_exe.php; DestDir: {app}\Shellcode_2_exe
+;Source: ./Shellcode_2_exe\husk.exe; DestDir: {app}\Shellcode_2_exe
 Source: ./IDCDumpFix\Form1.frx; DestDir: {app}\IDCDumpFix
 Source: ./IDCDumpFix\Project1.vbw; DestDir: {app}\IDCDumpFix
 Source: ./IDCDumpFix\Form1.frm; DestDir: {app}\IDCDumpFix
