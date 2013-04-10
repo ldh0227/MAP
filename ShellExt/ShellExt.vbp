@@ -12,6 +12,7 @@ Form=frmFileHash.frm
 Class=CCmnDlg; CCmnDlg.cls
 Class=CPEEditor; CPEEditor.cls
 Class=CSection; CSection.cls
+Module=FileProps; FileVer.bas
 IconForm="frmMain"
 Startup="frmMain"
 HelpFile=""

@@ -254,7 +254,7 @@ Private Sub Form_Load()
     If Len(minStrLen) = 0 Then minStrLen = 4
     Text1 = minStrLen
     
-    'frmFileHash.ShowFileStats "c:\boot.ini"
+    'frmFileHash.ShowFileStats "c:\windows\notepad.exe"
     'Exit Sub
     
     'frmStrings.ParseFile "c:\peEditor.exe"
