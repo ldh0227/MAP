@@ -843,11 +843,11 @@ void main(int argc, char **argv){
 		return;
 	}
 	
-	if( bufsz > 5000){
+	/*if( bufsz > 5000){
 		printf("What in the world are you loading..to big..nay i say!\n");
 		CloseHandle(h);
 		return;
-	}
+	}*/
 
 	if(addbpx){
 		printf("Adding Breakpoint to beginning of shellcode buffer\n");

@@ -75,20 +75,28 @@ Begin VB.Form frmFileHash
       Begin VB.Menu mnuStrings 
          Caption         =   "Strings"
       End
-      Begin VB.Menu mnuSearch 
-         Caption         =   "Search"
-         Begin VB.Menu mnuSearchHash 
-            Caption         =   "Hash"
-         End
-         Begin VB.Menu mnuSearchFileName 
-            Caption         =   "File Name"
-         End
-      End
       Begin VB.Menu mnuVt 
          Caption         =   "Virus Total"
       End
       Begin VB.Menu mnuFileProps 
          Caption         =   "File Properties"
+      End
+      Begin VB.Menu mnuExternal 
+         Caption         =   "External"
+         Begin VB.Menu mnuSearchFileName 
+            Caption         =   "Google File Name"
+         End
+         Begin VB.Menu mnuSearchHash 
+            Caption         =   "Google File MD5"
+         End
+         Begin VB.Menu mnuExt 
+            Caption         =   "Edit Cfg"
+            Index           =   0
+         End
+         Begin VB.Menu mnuExt 
+            Caption         =   "-"
+            Index           =   1
+         End
       End
    End
 End
@@ -100,6 +108,8 @@ Attribute VB_Exposed = False
 Dim myMd5 As String
 Dim LoadedFile As String
 Dim isPE As Boolean
+Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hWnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+
 
 Sub ShowFileStats(fpath As String)
     
@@ -190,10 +200,41 @@ End Sub
 
 Private Sub Form_Load()
     mnuPopup.Visible = False 'IsIde()
+
+    Dim ext As String
+    ext = App.path & IIf(IsIde(), "\..\", "") & "\shellext.external.txt"
+    If fso.FileExists(ext) Then
+        ext = fso.ReadFile(ext)
+        tmp = Split(ext, vbCrLf)
+        For Each x In tmp
+            AddExternal CStr(x)
+        Next
+    End If
+    
 End Sub
 
 Private Sub lblMore_Click()
     PopupMenu mnuPopup
+End Sub
+
+Private Sub mnuExt_Click(index As Integer)
+    On Error GoTo hell
+    Dim cmd As String
+    
+    If index = 0 Then
+        cmd = App.path & IIf(IsIde(), "\..\", "") & "\shellext.external.txt"
+        Shell "notepad.exe " & GetShortName(cmd), vbNormalFocus
+    Else
+        cmd = mnuExt(index).Tag
+        cmd = Replace(cmd, "%1", GetShortName(LoadedFile))
+        cmd = Replace(cmd, "%app_path%", App.path & IIf(IsIde(), "\..\", "\"))
+        Shell cmd, vbNormalFocus
+    End If
+    
+    Exit Sub
+hell:
+    MsgBox "Error launching program cmdline: " & vbCrLf & vbCrLf & cmd, vbInformation
+        
 End Sub
 
 Private Sub mnuFileProps_Click()
@@ -225,4 +266,26 @@ End Sub
 
 Private Sub mnuVt_Click()
     cmdVT_Click
+End Sub
+
+Sub AddExternal(cmd As String)
+     
+    Dim i As Integer
+    cmd = Trim(cmd)
+    If Len(cmd) = 0 Then Exit Sub
+    If VBA.Left(cmd, 1) = "#" Then Exit Sub
+    
+    tmp = Split(cmd, "=", 2)
+    
+    If UBound(tmp) <> 1 Then
+        MsgBox "Invalid external menu entry. format is menu_text=command_line" & vbCrLf & vbCrLf & cmd
+        Exit Sub
+    End If
+    
+    i = mnuExt.Count
+    Load mnuExt(i)
+    mnuExt(i).Caption = Trim(tmp(0))
+    mnuExt(i).Visible = True
+    mnuExt(i).Tag = Trim(tmp(1))
+    
 End Sub

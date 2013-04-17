@@ -122,6 +122,7 @@ Source: loadlib.exe; DestDir: {win}; Flags: ignoreversion
 Source: fakedns\CStrings.cls; DestDir: {app}\fakedns\
 Source: proc_watch.exe; DestDir: {app}
 Source: dirwatch_ui.exe; DestDir: {app}
+Source: shellext.external.txt; DestDir: {app}
 
 [Dirs]
 Name: {app}\IDCDumpFix
